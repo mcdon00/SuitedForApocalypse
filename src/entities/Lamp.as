@@ -20,6 +20,8 @@ package entities
 		//-------------------------------------------------CONSTRUCTOR
 		public function Lamp(x:Number,y:Number) 
 		{
+			height = sprLamp.height;
+			width = sprLamp.width;
 			super(x, y);
 			var aryFlickers:Array = new Array();
 			for (var i:int = 0; i < 64; i++) 
@@ -34,9 +36,8 @@ package entities
 		}
 		//-------------------------------------------------GAME LOOP
 		override public function update():void {
-			//sprLamp.play("flicker");
-			flickerTime = flickerTime + FP.elapsed;
-			//trace(rndFlicker);
+			flickerTime +=  FP.elapsed;
+			
 			if (flickerTime >= rndFlicker) {
 				sprLamp.setFrame(0);
 				flickerTime = 0;
