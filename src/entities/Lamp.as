@@ -12,6 +12,7 @@ package entities
 	{
 		//-------------------------------------------------CONSTANTS
 		[Embed(source = '../../assets/lamp.png')] private const LAMP:Class;
+		private const MAX_FLICKER_TIME:int = 100;
 		//-------------------------------------------------PROPERTIES
 		public var sprLamp:Spritemap = new Spritemap(LAMP,104.9,285);
 		
@@ -32,7 +33,7 @@ package entities
 			sprLamp.add("flicker",aryFlickers,60,false);
 			graphic = sprLamp;
 			flickerTime = 0;
-			rndFlicker = Math.floor(Math.random()* 15) +5;
+			rndFlicker = Math.floor(Math.random()* MAX_FLICKER_TIME) +5;
 		}
 		//-------------------------------------------------GAME LOOP
 		override public function update():void {
@@ -42,7 +43,7 @@ package entities
 				sprLamp.setFrame(0);
 				flickerTime = 0;
 				sprLamp.play("flicker");
-				rndFlicker = Math.floor(Math.random()* 15) +5
+				rndFlicker = Math.floor(Math.random()* MAX_FLICKER_TIME) +5
 			}
 			super.update();
 		}

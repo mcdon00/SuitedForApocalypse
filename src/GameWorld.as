@@ -1,6 +1,7 @@
 package  
 {
 	import entities.Player;
+	import entities.Zombie;
 	import net.flashpunk.utils.Input;
 	import net.flashpunk.utils.Key;
 	import net.flashpunk.World;
@@ -19,47 +20,116 @@ package
 		[Embed(source = '../assets/map.png')] private const BACKGROUND_IMG:Class;
 		private const FLOOR:Number = FP.screen.height - 175;
 		private const SPEED:Number = 80;
+		private const NUM_OF_LAMPS:Number = 7;
+		private const ZOMBIE_SPAWN_POINTS:Array = [1300, 1900, 2700, 3500];
+		
+		
+		
+		
 		//------------------------------------------------PROPERTIES
 		//variableto hold background image
 		public var imgBackground:Image;
 		//lamp,player objects
 		public var entLamp:Lamp;
+		public var aryEntLamp:Array;
 		public var entPlayer:Player;
+		public var entZombie:Zombie;
+		public var aryEntZombies:Array;
 		
 		//------------------------------------------------CONSTRUCTOR
 		public function GameWorld() 
 		{
-			imgBackground = new Image(BACKGROUND_IMG);//TODO Fix proportions in background, funeral home is tiny now, base the change off of the lamp size
-			entLamp = new Lamp(200, 175);
+			imgBackground = new Image(BACKGROUND_IMG);
+			aryEntLamp = new Array();
+			aryEntZombies = new Array();
+			// create and populate and array of lamp entity
+			var locationX:int = 300;
+			for (var i:int = 0; i < NUM_OF_LAMPS; i++) {
+				entLamp = new Lamp(locationX, 175);
+				aryEntLamp.push(entLamp);
+				locationX += 800;
+			}
+			
+			// create the player entity
 			entPlayer = new Player(300, 374);
+			
+			
+			
+			// define the inputs for left and right movement
 			Input.define("left", Key.A, Key.LEFT);
 			Input.define("right",Key.D,Key.RIGHT);
 		}
+		
 		override public function begin():void {
 			//addbackground image
 			addGraphic(imgBackground);
-			add(entLamp);
+			//add the player to the stage
 			add(entPlayer);
+			//add each of the lamps to the stage
+			for (var i:int = 0; i < aryEntLamp.length-1; i++) {
+				add(aryEntLamp[i]);
+				
+			}
+			
 			
 		}
+		
 		//------------------------------------------------GAMELOOP
 		
 		override public function update():void {
 			//TODO check for escape key, if pressed send back to main menu
-			
-			if (Input.check("right")) {
-				imgBackground.x -= SPEED * FP.elapsed;
-				entLamp.x -= SPEED * FP.elapsed;
-			}
-			if (Input.check("left")) {
-				imgBackground.x += SPEED * FP.elapsed;
-				entLamp.x += SPEED * FP.elapsed;
-			}
-			
-			
+				
+				if (Input.check("right")) {
+					//check for end of map, if not at end move the map under the player
+					if (!(entPlayer.x + entPlayer.width >= imgBackground.x +imgBackground.width -50)) {
+						//move the map with the player movement
+						imgBackground.x -= SPEED * FP.elapsed;
+						//move each of the lamps with the player movement
+						for (var i:int = 0; i < aryEntLamp.length - 1; i++) {
+							aryEntLamp[i].x -= SPEED * FP.elapsed;
+						}
+						//move each of the zombie spawn points with the player movement
+						for (i = 0; i < ZOMBIE_SPAWN_POINTS.length - 1; i++) {
+							ZOMBIE_SPAWN_POINTS[i] -= SPEED * FP.elapsed;
+						}
+					}
+				}
+				
+				if (Input.check("left")) {
+					//check for end of map, if not at end move the map under the player
+					if (!(entPlayer.x <= imgBackground.x + 75)) {
+						//move the map with the player movement
+						imgBackground.x += SPEED * FP.elapsed;
+						entLamp.x += SPEED * FP.elapsed;
+						//move each of the lamps with the player movement
+						for (i = 0; i < aryEntLamp.length - 1; i++) {
+							aryEntLamp[i].x += SPEED * FP.elapsed;
+						}
+						//move each of the zombie spawn points with the player movement
+						for (i = 0; i < ZOMBIE_SPAWN_POINTS.length - 1; i++) {
+							ZOMBIE_SPAWN_POINTS[i] += SPEED * FP.elapsed;
+						}
+					}
+				}
 			super.update();
 		}
-		
+		//------------------------------------------------PUBLIC METHODS
+		// function to spawn all of the zombies in the stage
+		/*  must check to make sure that zombies wont spawn from spawn points that the player is close to
+		 * zombies will be spawned randomly in random numbers from each spawn point
+		 * each wave of zombies will gradually increase with a cap after a certain number of waves
+		 * a check will also have to be done in the objects generation to ensure obstacles are not spawned at zombie 
+		 * spawn points*/
+		public function spawnZombies(numToSpawn:int):Array {
+			var playerXMiddle:Number = entPlayer.x + (entPlayer.width / 2);
+				
+			var distanceFromSpawn:Number = Math.abs(playerXMiddle - ZOMBIE_SPAWN_POINTS[0]);
+			
+			trace(distanceFromSpawn);
+			entZombie = new Zombie(500, 374, Zombie.TYPE_TSHIRT_ZOMBIE);
+			
+			return aryEntZombies;
+		}
 	}
 
 }
