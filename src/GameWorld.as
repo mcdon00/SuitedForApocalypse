@@ -1,7 +1,9 @@
 package  
 {
+	import entities.Crate;
 	import entities.Player;
 	import entities.Zombie;
+	import net.flashpunk.Entity;
 	import net.flashpunk.utils.Input;
 	import net.flashpunk.utils.Key;
 	import net.flashpunk.World;
@@ -19,9 +21,11 @@ package
 		//const for background image
 		[Embed(source = '../assets/map.png')] private const BACKGROUND_IMG:Class;
 		private const FLOOR:Number = FP.screen.height - 175;
-		private const SPEED:Number = 80;
+		private const SPEED:Number = 150;
 		private const NUM_OF_LAMPS:Number = 7;
+		private const NUM_OF_CRATES:Number = 5;
 		private const ZOMBIE_SPAWN_POINTS:Array = [1300, 1900, 2700, 3500];
+		
 		
 		
 		
@@ -29,12 +33,19 @@ package
 		//------------------------------------------------PROPERTIES
 		//variableto hold background image
 		public var imgBackground:Image;
-		//lamp,player objects
+		//lamp,player zombie objects
 		public var entLamp:Lamp;
 		public var aryEntLamp:Array;
 		public var entPlayer:Player;
 		public var entZombie:Zombie;
 		public var aryEntZombies:Array;
+		
+		//obstacles
+		public var entCrate:Crate;
+		public var aryEntCrate:Array;
+		public var numOfCrates:int;
+		
+		
 		
 		//------------------------------------------------CONSTRUCTOR
 		public function GameWorld() 
@@ -50,10 +61,25 @@ package
 				locationX += 800;
 			}
 			
+			//create the crate obstacles
+			aryEntCrate = new Array();
+			 //create and populate and array of crate entities
+			locationX = 800;
+			numOfCrates = 0;
+			var random:Number = Math.floor(Math.random() * NUM_OF_CRATES) +5;
+			var arr:Array = rndLocationsX(random,84,48); 
+			for (i = 0; i < random; i++) {
+				numOfCrates++;
+				entCrate = new Crate(locationX, 374);
+				
+				aryEntCrate.push(entCrate);
+				trace(arr[i] + " UP");
+				locationX = arr[i];
+				//keep an array of past locations to check against?
+			}
+			
 			// create the player entity
 			entPlayer = new Player(300, 374);
-			
-			
 			
 			// define the inputs for left and right movement
 			Input.define("left", Key.A, Key.LEFT);
@@ -72,13 +98,16 @@ package
 			}
 			
 			
+			for (i = 0; i < numOfCrates; i++) {
+				add(aryEntCrate[i]);
+			}
 		}
 		
 		//------------------------------------------------GAMELOOP
 		
 		override public function update():void {
 			//TODO check for escape key, if pressed send back to main menu
-				
+				//spawnZombies(4);
 				if (Input.check("right")) {
 					//check for end of map, if not at end move the map under the player
 					if (!(entPlayer.x + entPlayer.width >= imgBackground.x +imgBackground.width -50)) {
@@ -91,6 +120,10 @@ package
 						//move each of the zombie spawn points with the player movement
 						for (i = 0; i < ZOMBIE_SPAWN_POINTS.length - 1; i++) {
 							ZOMBIE_SPAWN_POINTS[i] -= SPEED * FP.elapsed;
+						}
+						//move the crates with the map
+						for (i = 0; i < numOfCrates; i++) {
+							aryEntCrate[i].x -= SPEED * FP.elapsed;
 						}
 					}
 				}
@@ -109,8 +142,14 @@ package
 						for (i = 0; i < ZOMBIE_SPAWN_POINTS.length - 1; i++) {
 							ZOMBIE_SPAWN_POINTS[i] += SPEED * FP.elapsed;
 						}
+						//move the crates with the map
+						for (i = 0; i < numOfCrates; i++) {
+							aryEntCrate[i].x += SPEED * FP.elapsed;
+						}
 					}
 				}
+				
+				
 			super.update();
 		}
 		//------------------------------------------------PUBLIC METHODS
@@ -121,15 +160,45 @@ package
 		 * a check will also have to be done in the objects generation to ensure obstacles are not spawned at zombie 
 		 * spawn points*/
 		public function spawnZombies(numToSpawn:int):Array {
-			var playerXMiddle:Number = entPlayer.x + (entPlayer.width / 2);
-				
-			var distanceFromSpawn:Number = Math.abs(playerXMiddle - ZOMBIE_SPAWN_POINTS[0]);
 			
-			trace(distanceFromSpawn);
+			var playerXMiddle:Number = entPlayer.x + (entPlayer.width / 2);
+			
+			for (var i:int = 0; i < ZOMBIE_SPAWN_POINTS.length; i++) 
+			{
+				var distanceFromSpawn:Number = Math.abs(playerXMiddle - ZOMBIE_SPAWN_POINTS[i]);
+				if (distanceFromSpawn < 500) {
+					trace(distanceFromSpawn + ": "+i);
+				}
+			}
+			
+			trace(imgBackground.width);
+			//trace(distanceFromSpawn);
 			entZombie = new Zombie(500, 374, Zombie.TYPE_TSHIRT_ZOMBIE);
 			
 			return aryEntZombies;
 		}
+		
+		public function rndLocationsX(numOfLocations:int, entWidth:Number, range:Number):Array {
+			var posX:Number = 0;
+			var aryPastLocations:Array = new Array();
+			var aryLocations:Array = new Array();
+			for (var j:int = 0; j < numOfLocations; j++) 
+			{
+				posX = Math.floor(Math.random() * range) * entWidth;
+				while (posX < FP.screen.width) {
+					posX = Math.floor(Math.random() * range) * entWidth;
+				}
+				
+				for (var i:int = 0; i < aryPastLocations.length; i++) 
+				{
+					while (aryPastLocations[i] == posX) {
+						posX = Math.floor(Math.random() * range) * entWidth;
+					}						
+				}
+				aryPastLocations.push(posX);
+				aryLocations.push(posX);
+			}
+			return aryLocations;
+		}
 	}
-
 }

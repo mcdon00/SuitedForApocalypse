@@ -15,6 +15,7 @@ package entities
 		
 		//------------------------------------------------CONSTANTS
 		[Embed(source = '../../assets/zombiePlaceHolder.png')] private const ZOMBIE_PLACEHOLDER:Class;
+		private const ZOMBIE_IDLE:String = "idle";
 		public static const TYPE_TSHIRT_ZOMBIE:String = "tshirtZombie";
 		
 		//------------------------------------------------PROPERTIES
@@ -37,6 +38,12 @@ package entities
 		}
 		
 		//------------------------------------------------PUBLIC METHODS
+		
+		public function idleMovement():int{
+			//randomly move zombie while in idle state;
+			var newPos:int = 0;
+			return newPos;
+		}
 		
 	}
 

@@ -16,16 +16,17 @@
     </define>
     <define append="true">
       <name>CONFIG::timeStamp</name>
-      <value>'2/5/2013'</value>
+      <value>'2/6/2013'</value>
     </define>
     <verbose-stacktraces>true</verbose-stacktraces>
     <source-path append="true">
-      <path-element>C:\Users\w0135797\Desktop\suitedForApocolypse\src</path-element>
+      <path-element>C:\Users\w0135797\Downloads\suitedForApocolypse\src</path-element>
+      <path-element>C:\Program Files (x86)\Adobe\Adobe Flash CS6\Common\First Run\Classes\mx</path-element>
       <path-element>C:\Program Files (x86)\FlashDevelop\Library\AS3\classes</path-element>
     </source-path>
   </compiler>
   <file-specs>
-    <path-element>C:\Users\w0135797\Desktop\suitedForApocolypse\src\Main.as</path-element>
+    <path-element>C:\Users\w0135797\Downloads\suitedForApocolypse\src\Main.as</path-element>
   </file-specs>
   <default-background-color>#FFFFFF</default-background-color>
   <default-frame-rate>30</default-frame-rate>

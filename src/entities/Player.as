@@ -6,6 +6,7 @@ package entities
 	import net.flashpunk.graphics.*;
 	import net.flashpunk.utils.Input;
 	import net.flashpunk.utils.Key;
+	import net.flashpunk.World;
 	
 	/**
 	 * ...
@@ -29,7 +30,7 @@ package entities
 		private const JUMP_RIGHT:String = "jRight";
 		private const JUMP_LEFT:String = "jLeft";
 		
-		private const JUMP:int = 300;
+		private const JUMP:int = 350;
 		private const GRAVITY:Number = 9.8;
 		private const PLATFORM_HEIGHT:Number = 136;
 		
@@ -66,8 +67,8 @@ package entities
 				aryAnimation[i] = i;
 			}
 			
-			sprPlayerWalkRight.add("playerWalkRight", aryAnimation, 80, true);
-			sprPlayerWalkLeft.add("playerWalkLeft",aryAnimation,80,true);
+			sprPlayerWalkRight.add("playerWalkRight", aryAnimation, 100, true);
+			sprPlayerWalkLeft.add("playerWalkLeft",aryAnimation,100,true);
 			
 			graphic = sprPlayerBreathRight;
 			
@@ -86,7 +87,6 @@ package entities
 		override public function update():void {
 			//check for left movement
 			if (state != JUMP_LEFT || state != JUMP_RIGHT ) {
-				
 				if (Input.check("left")) {
 					state = WALKING_LEFT;
 					graphic = sprPlayerWalkLeft;
@@ -94,6 +94,7 @@ package entities
 				}else  if(Input.released("left")){
 					state = IDLE_LEFT;
 				}
+				
 				//check for right movement
 				if (Input.check("right")) {
 					state = WALKING_RIGHT;
@@ -140,10 +141,23 @@ package entities
 			
 			//trace(state);
 			
+			//check if colliding with crate
+			var c:Crate = collide("crate", x,y) as Crate;
+			// collide checks for any intersecting instances of crate
+			
+			if (y + height > c.y + height) {
+					v.y = 0;
+					y  = FP.screen.height - PLATFORM_HEIGHT - c.height - height;
+				}
+			if (c) {
+				
+				
+				
+			}
+			
 			
 			super.update();
 		}
-		
 		
 		protected function jump():void {
 			if ((y + height >= FP.screen.height - PLATFORM_HEIGHT)) {
@@ -155,6 +169,17 @@ package entities
 				}else if (state == IDLE_RIGHT || state == WALKING_RIGHT) {
 					state = JUMP_RIGHT;
 				}
+			}
+			
+			
+		}
+		public function colliding(gameWorld:World):void 
+		{
+			//check if colliding with crate
+			var c:Crate = collide("crate", x,y) as Crate;
+			// collide checks for any intersecting instances of crate
+			if (c) {
+				
 			}
 		}
 	}
