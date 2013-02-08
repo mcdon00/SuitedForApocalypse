@@ -130,31 +130,20 @@ package entities
 			a.y = GRAVITY;
 			v.y += a.y;
 			
-			//apply physics
-			y += v.y * FP.elapsed;
+			//check if colliding with crate
+			var c:Crate = collide("crate", x,y) as Crate;
 			
+			//if (!c) y += v.y * FP.elapsed;
+			 y += v.y * FP.elapsed;
 			//collision checks
 			if (y + this.height > FP.screen.height-PLATFORM_HEIGHT) {
 				v.y = 0;
 				y = FP.screen.height - PLATFORM_HEIGHT - height;
 			}
+			//apply physics
+			
 			
 			//trace(state);
-			
-			//check if colliding with crate
-			var c:Crate = collide("crate", x,y) as Crate;
-			// collide checks for any intersecting instances of crate
-			
-			if (y + height > c.y + height) {
-					v.y = 0;
-					y  = FP.screen.height - PLATFORM_HEIGHT - c.height - height;
-				}
-			if (c) {
-				
-				
-				
-			}
-			
 			
 			super.update();
 		}
@@ -175,12 +164,13 @@ package entities
 		}
 		public function colliding(gameWorld:World):void 
 		{
+			//trace(gameWorld.x);
 			//check if colliding with crate
-			var c:Crate = collide("crate", x,y) as Crate;
+			//var c:Crate = collide("crate", x,y) as Crate;
 			// collide checks for any intersecting instances of crate
-			if (c) {
-				
-			}
+			//if (c) {
+				//
+			//}
 		}
 	}
 

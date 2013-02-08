@@ -26,10 +26,6 @@ package
 		private const NUM_OF_CRATES:Number = 5;
 		private const ZOMBIE_SPAWN_POINTS:Array = [1300, 1900, 2700, 3500];
 		
-		
-		
-		
-		
 		//------------------------------------------------PROPERTIES
 		//variableto hold background image
 		public var imgBackground:Image;
@@ -70,12 +66,9 @@ package
 			var arr:Array = rndLocationsX(random,84,48); 
 			for (i = 0; i < random; i++) {
 				numOfCrates++;
-				entCrate = new Crate(locationX, 374);
-				
-				aryEntCrate.push(entCrate);
-				trace(arr[i] + " UP");
 				locationX = arr[i];
-				//keep an array of past locations to check against?
+				entCrate = new Crate(locationX, 374);
+				aryEntCrate.push(entCrate);
 			}
 			
 			// create the player entity
@@ -108,22 +101,38 @@ package
 		override public function update():void {
 			//TODO check for escape key, if pressed send back to main menu
 				//spawnZombies(4);
+				//crate/player collision detection
+				var c:Crate = entPlayer.collide("crate", entPlayer.x, entPlayer.y) as Crate;
+				var isCollide:Boolean = false;
+				if (c != null) {
+					trace(c.y + "crate y");
+					trace(entPlayer.y + entPlayer.height);
+					//TODO still need to allow y while x is being stopped
+					if (c && entPlayer.y + entPlayer.height != c.y) {
+						isCollide = true;
+					}
+				}
+				
+				
 				if (Input.check("right")) {
+					
 					//check for end of map, if not at end move the map under the player
 					if (!(entPlayer.x + entPlayer.width >= imgBackground.x +imgBackground.width -50)) {
-						//move the map with the player movement
-						imgBackground.x -= SPEED * FP.elapsed;
-						//move each of the lamps with the player movement
-						for (var i:int = 0; i < aryEntLamp.length - 1; i++) {
-							aryEntLamp[i].x -= SPEED * FP.elapsed;
-						}
-						//move each of the zombie spawn points with the player movement
-						for (i = 0; i < ZOMBIE_SPAWN_POINTS.length - 1; i++) {
-							ZOMBIE_SPAWN_POINTS[i] -= SPEED * FP.elapsed;
-						}
-						//move the crates with the map
-						for (i = 0; i < numOfCrates; i++) {
-							aryEntCrate[i].x -= SPEED * FP.elapsed;
+						if (!isCollide){
+							//move the map with the player movement
+							imgBackground.x -= SPEED * FP.elapsed;
+							//move each of the lamps with the player movement
+							for (var i:int = 0; i < aryEntLamp.length - 1; i++) {
+								aryEntLamp[i].x -= SPEED * FP.elapsed;
+							}
+							//move each of the zombie spawn points with the player movement
+							for (i = 0; i < ZOMBIE_SPAWN_POINTS.length - 1; i++) {
+								ZOMBIE_SPAWN_POINTS[i] -= SPEED * FP.elapsed;
+							}
+							//move the crates with the map
+							for (i = 0; i < numOfCrates; i++) {
+								aryEntCrate[i].x -= SPEED * FP.elapsed;
+							}
 						}
 					}
 				}
@@ -148,7 +157,8 @@ package
 						}
 					}
 				}
-				
+				//trace(this.imgBackground.x+ entPlayer.x);
+				//entPlayer.colliding();
 				
 			super.update();
 		}
@@ -177,7 +187,11 @@ package
 			
 			return aryEntZombies;
 		}
-		
+		//function to generate random locations, used for obstacles
+		//function generates a random number within a certain range specified but then multiplyed by the width
+		//of the object that is being placed, this is to ensure each location is a multiple of the width
+		// and thus wont be overlapping unless the exact same number is generated, in which case there is a 
+		//condition to fix that
 		public function rndLocationsX(numOfLocations:int, entWidth:Number, range:Number):Array {
 			var posX:Number = 0;
 			var aryPastLocations:Array = new Array();
