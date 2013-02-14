@@ -17,102 +17,160 @@ package entities
 		[Embed(source = '../../assets/zombiePlaceHolder.png')] private const ZOMBIE_PLACEHOLDER:Class;
 		private const ZOMBIE_IDLE:String = "idle";
 		public static const TYPE_TSHIRT_ZOMBIE:String = "tshirtZombie";
-		private const MAX_MOVE_TIME:int = 150;
+		private const MAX_MOVE_TIME:int = 50;
+		private const SPEED:Number = 100;
 		
 		//------------------------------------------------PROPERTIES
 		protected var sprZombiePlaceHolder:Spritemap = new Spritemap(ZOMBIE_PLACEHOLDER, 36, 93);
-		protected var moveTime:Number;
+		protected var startMove:Number;
+		protected var endMove:Number;
 		protected var rndMovement:Number;
 		protected var moveLeft:Number;
 		protected var moveRight:Number;
-		
+		protected var c:Crate;
 		protected var v:Point;
+		protected var stoppedLeft:Boolean; 
+		protected var stoppedRight:Boolean;
+		protected var playerXMiddle:Number;
+		protected var player:Entity;
+		protected var isCollideLeft:Boolean;
+		protected var isCollideRight:Boolean;
 		
 		//------------------------------------------------CONSTRUCTOR
 		
-		public function Zombie(x:Number,y:Number,myType:String) 
+		public function Zombie(x:Number,y:Number,myType:String,myPlayer:Entity) 
 		{
 			
-			
+			player = myPlayer;
 			this.type = myType;
 			sprZombiePlaceHolder.add("zombiePlaceHolder", [1], 100, false);
 			super(x, y, sprZombiePlaceHolder);
-			setHitbox(50, 90);
+			setHitbox(30, 90);
 			
-			moveTime = 0;
+			startMove = 0;
+			endMove = 0;
 			rndMovement = Math.floor(Math.random() * MAX_MOVE_TIME);
 			v = new Point();
 			v.x = 0;
 			moveLeft = 0;
 			moveRight = 0;
-			v.x = 100;
+			v.x = SPEED;
+			
 		}
 		//------------------------------------------------GAME LOOP
 		override public function update():void {
 			sprZombiePlaceHolder.play();
+			//check for distance away from player
+			playerXMiddle = player.x + (player.width / 2);
+			var distanceFromMe:Number = Math.abs(playerXMiddle - x);
+			
 			
 			
 			//TODO create conditions for movement
-			idleMovement();
+			//TODO fanout on spawn
+			if (distanceFromMe < 200) {
+				attackMovement();
+			}else {
+				idleMovement();
+			}
+			
+			
+			
+			v.x = SPEED;
+			
+			//collision detection
+			var c:Crate = collide("crate", x, y) as Crate;
+			isCollideLeft = false;
+			isCollideRight = false;
+			if (c != null) {
+				
+				if ((c.x <= x + width)&& (c.x > x)) {
+					isCollideLeft = true;
+				}else if ((c.x + c.width >= x)) {
+					isCollideRight = true;
+				}
+			}
+			
+		
+			var p:Player = collide("player", x, y) as Player;
+			
+			
+			if (p) {
+				//TODO attack!
+				v.x = 0;
+			}
 			
 			super.update();
 		}
 		
 		//------------------------------------------------PUBLIC METHODS
-		
+		public function attackMovement():void{
+			if (playerXMiddle < x) {
+				if (!isCollideRight) {
+					x -= v.x * FP.elapsed;
+				}
+
+			}else {
+				if (!isCollideLeft) {
+					x += v.x * FP.elapsed;
+				}
+			}
+		}
 		public function idleMovement():void{
 			//randomly move zombie while in idle state;
-			moveTime += FP.elapsed;
-			rndMovement = Math.floor(Math.random() * MAX_MOVE_TIME);
 			
-			if (moveTime >= rndMovement) {
+				startMove += FP.elapsed;
+				endMove += FP.elapsed;
+			
 				
-				moveTime = 0;
-
-				
-				
-				if (randomBoolean()) {
-					moveRight = Math.floor(Math.random() * 100);
-					moveRight = x + moveRight;
-					//trace(moveRight + " MOVERIGHT");
-					moveLeft = 0;
-				}else {
-					moveLeft = Math.floor(Math.random() * 100);
-					moveLeft = x - moveLeft;
-					//trace(moveLeft + " MOVELEFT");
-					moveRight = 0;
+				if (startMove >= rndMovement) {
+					rndMovement = Math.floor(Math.random() * MAX_MOVE_TIME);
+					
+					startMove = 0;
+					endMove = 0;
+					if (randomBoolean()) {
+						moveRight = Math.floor(Math.random() * 2);
+						moveLeft = 0;
+					}else {
+						moveLeft = Math.floor(Math.random() * 2);
+						moveRight = 0;
+					}
+					
 				}
-				
-			}
-			
-			
-			
-			//trace(distanceToMove + "Distance to move");
-			
-			
-			//if (!(x > distanceToMove) || !(x < distanceToMove)) {
-				
-			//}
-			
-			if (moveRight != 0) {
-				if (!(x >= moveRight)) {
-					x += v.x * FP.elapsed;
-				}else {
-					x = moveRight;
-					moveLeft = 0;
+				//TODO add collision detection using the isCollides
+				if (moveRight != 0) {
+					c = collide("crate", x, y) as Crate;
+					if (!(endMove >= moveRight)) {
+						stoppedRight = false;
+						if (c) {
+							stoppedRight = true;
+							v.x = 0;
+						}
+						
+						if (stoppedLeft) {
+							v.x = SPEED;
+						}
+						
+						x += v.x * FP.elapsed;
+					}
+				}else if (moveLeft != 0) {
+					c = collide("crate", x, y) as Crate;
+					if (!(endMove >= moveLeft)) {
+						stoppedLeft = false;
+						if (c) {
+							stoppedLeft = true;
+							v.x = 0;
+						}
+						
+						if (stoppedRight) {
+							v.x = SPEED;
+						}
+						
+						x -= v.x * FP.elapsed;
+					}
 				}
-				//trace(x + " POS X MOVERIGHT" + moveRight);
-			}else if(moveLeft != 0) {
-				if (!(x <= moveLeft)) {
-					x -= v.x * FP.elapsed;
-					trace("YES");
-				}else {
-					x = moveLeft;
-					moveRight = 0;
-					trace("NO");
-				}
-				//trace(x + " POS X MOVELEFT" + moveLeft);
-			}
+			
+			
 		}
 		
 		protected function randomBoolean():Boolean
@@ -120,7 +178,6 @@ package entities
 			return Boolean( Math.round(Math.random()) );
 		}
 		 
-		
 		
 	}
 

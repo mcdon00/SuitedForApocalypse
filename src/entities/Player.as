@@ -52,6 +52,7 @@ package entities
 		public function Player(x:Number,y:Number) 
 		{
 			super(x, y);
+			type = "player";
 			jumpDelay = 0;
 			var aryAnimation:Array = new Array();
 				for (i= 0; i < 15; i++) 
@@ -110,10 +111,14 @@ package entities
 				}
 			}
 			//check if colliding with crate
-			var c:Crate = collide("crate", x,y) as Crate;
+			var c:Crate = collide("crate", x, y) as Crate;
+			var z:Zombie = collide(Zombie.TYPE_TSHIRT_ZOMBIE, x, y) as Zombie;
 			//check for jumping
 			jumpDelay -= FP.elapsed;
-			if (Input.check("up") && jumpDelay <= 0) jump(c);//TODO have to play animation while in jump state
+			if (!z) {
+				if (Input.check("up") && jumpDelay <= 0) jump(c);//TODO have to play animation while in jump state
+			}
+			
 			
 			if (state == JUMP_LEFT) {
 				graphic = sprPlayerJumpUpLeft;
@@ -147,10 +152,14 @@ package entities
 				y = FP.screen.height - PLATFORM_HEIGHT - height;
 				
 			}else if (c) {
-				//TODO checking for left side only
-				if (c.x < (x + width - 10) && (c.x+c.width > x + 10)  &&(y + this.height > FP.screen.height-PLATFORM_HEIGHT-c.height-4)) {
+				if (c.x < (x + width - 10) && (c.x+c.width > x + 10)  &&(y + this.height > FP.screen.height-PLATFORM_HEIGHT-c.height+2)) {
 					v.y = 0;
-					y = FP.screen.height - PLATFORM_HEIGHT - height - c.height -5;
+					y = FP.screen.height - PLATFORM_HEIGHT - height - c.height +1;
+				}
+			}else if (z) {
+				if ((z.x < (x + width - 20) && (z.x+z.width > x + 20)  &&(y + this.height > FP.screen.height-PLATFORM_HEIGHT-z.height))) {
+					v.y = 0;
+					y = FP.screen.height - PLATFORM_HEIGHT - height - z.height;
 				}
 			}
 			

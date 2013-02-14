@@ -50,7 +50,7 @@ package
 			// create and populate and array of lamp entity
 			var locationX:int = 300;
 			for (var i:int = 0; i < NUM_OF_LAMPS; i++) {
-				entLamp = new Lamp(locationX, 175);
+				entLamp = new Lamp(locationX, 180);
 				aryEntLamp.push(entLamp);
 				locationX += 800;
 			}
@@ -65,7 +65,7 @@ package
 			for (i = 0; i < random; i++) {
 				numOfCrates++;
 				locationX = arr[i];
-				entCrate = new Crate(locationX, 374);
+				entCrate = new Crate(locationX, 380);
 				aryEntCrate.push(entCrate);
 			}
 			
@@ -73,8 +73,9 @@ package
 			entPlayer = new Player(300, 374);
 			
 			//create the zombie entities
-			aryEntZombies = spawnZombies(1);
-			entZombie = new Zombie(400, 374, Zombie.TYPE_TSHIRT_ZOMBIE);
+			aryEntZombies = spawnZombies(5);
+			entZombie = new Zombie(400, 374, Zombie.TYPE_TSHIRT_ZOMBIE,entPlayer);
+			entCrate = new Crate(480, 380);
 			
 			
 			// define the inputs for left and right movement
@@ -89,9 +90,16 @@ package
 			add(entPlayer);
 			//add each of the zombies
 			for (var i:int = 0; i < aryEntZombies.length; i++) {
-				//add(aryEntZombies[i]);
+				add(aryEntZombies[i]);
 			}
 			add(entZombie);
+			//add(entCrate);
+			
+			
+			
+			for (i = 0; i < numOfCrates; i++) {
+				add(aryEntCrate[i]);
+			}
 			//add each of the lamps to the stage
 			for (i = 0; i < aryEntLamp.length-1; i++) {
 				add(aryEntLamp[i]);
@@ -99,20 +107,12 @@ package
 			}
 			
 			
-			for (i = 0; i < numOfCrates; i++) {
-				add(aryEntCrate[i]);
-			}
 		}
 		
 		//------------------------------------------------GAMELOOP
 		
 		override public function update():void {
-			//trace(aryEntZombies[0].x + " : " + aryEntZombies[0].y );
-			//trace(Math.abs(imgBackground.x) +  entPlayer.x);
 	
-			
-			
-			
 			//TODO check for escape key, if pressed send back to main menu
 				//crate/player collision detection
 				var c:Crate = entPlayer.collide("crate", entPlayer.x, entPlayer.y) as Crate;
@@ -121,21 +121,36 @@ package
 				if (c != null) {
 					if (c && ((entPlayer.y + entPlayer.height) > c.y +15)) {
 					
-						if ((c.x < entPlayer.x + entPlayer.width)) {
+						if ((c.x < entPlayer.x + entPlayer.width)&&(c.x > entPlayer.x)) {
 							isCollideLeft = true;
-						}
-						if ((c.x + c.width >= entPlayer.x)&&(c.x < entPlayer.x)) {
+						}else if ((c.x + c.width >= entPlayer.x)) {
 							isCollideRight = true;
+						}
+					}
+				}
+				
+				//player/zombie collision detection
+				var z:Zombie = entPlayer.collide(Zombie.TYPE_TSHIRT_ZOMBIE, entPlayer.x, entPlayer.y) as Zombie;
+				if (z != null) {
+					
+					if (z && ((entPlayer.y + entPlayer.height) > z.y +15)) {
+					
+						if ((z.x < entPlayer.x + entPlayer.width-15)&&(z.x > entPlayer.x)) {
+							isCollideLeft = true;
+						}else if ((z.x + z.width >= entPlayer.x)&&(z.x < entPlayer.x)) {
+							isCollideRight = true;
+							
 						}
 						
 					}
 				}
 				
-				
 				if (Input.check("right")) {
 					//check for end of map, if not at end move the map under the player
 					if (!(entPlayer.x + entPlayer.width >= imgBackground.x +imgBackground.width -50)) {
-						if (!isCollideLeft){
+						isCollideRight = false;
+						if (!isCollideLeft) {
+							
 							//move the map with the player movement
 							imgBackground.x -= SPEED * FP.elapsed;
 							//move each of the lamps with the player movement
@@ -155,6 +170,7 @@ package
 							for (i = 0; i < aryEntZombies.length; i++) {
 								aryEntZombies[i].x -= SPEED * FP.elapsed;
 							}
+							entZombie.x -= SPEED * FP.elapsed;
 						}
 					}
 				}
@@ -182,6 +198,7 @@ package
 							for (i = 0; i < aryEntZombies.length; i++) {
 								aryEntZombies[i].x += SPEED * FP.elapsed;
 							}
+							entZombie.x += SPEED * FP.elapsed;
 							
 						}
 					}
@@ -206,7 +223,7 @@ package
 				if (distanceFromSpawn > 500) {
 					for (var j:int = 0; j < numToSpawn ; j++) 
 					{
-						entZombie = new Zombie(ZOMBIE_SPAWN_POINTS[i], 374, Zombie.TYPE_TSHIRT_ZOMBIE);
+						entZombie = new Zombie(ZOMBIE_SPAWN_POINTS[i], 374, Zombie.TYPE_TSHIRT_ZOMBIE,entPlayer);
 						aryEntZombies.push(entZombie);
 					}
 				}
@@ -226,7 +243,7 @@ package
 			{
 				posX = 800+ (Math.floor(Math.random() * range)) * entWidth;
 				trace(posX);
-				//TODO have to fix bbefore 800, can't do them separetly must be at teh same time 
+				//TODO space them apart further to fix being able to jump on the side of boxes when they are close together
 				for (var i:int = 0; i < aryPastLocations.length; i++) 
 				{
 					while (aryPastLocations[i] == posX || posX < FP.screen.width) {
