@@ -31,6 +31,8 @@ package entities
 		private const JUMP_LEFT:String = "jLeft";
 		
 		private const JUMP:int = 350;
+		private const JUMP_DELAY:Number = 1.3;
+		
 		private const GRAVITY:Number = 9.8;
 		private const PLATFORM_HEIGHT:Number = 136;
 		
@@ -44,10 +46,13 @@ package entities
 		protected var state:String;
 		protected var a:Point;
 		protected var v:Point;
+		protected var jumpDelay:Number;
+		
 		//-------------------------------------------------CONSTRUCTOR
 		public function Player(x:Number,y:Number) 
 		{
-			super(x,y);
+			super(x, y);
+			jumpDelay = 0;
 			var aryAnimation:Array = new Array();
 				for (i= 0; i < 15; i++) 
 			{
@@ -77,7 +82,7 @@ package entities
 			Input.define("right", Key.D, Key.RIGHT);
 			Input.define("up", Key.UP, Key.W);
 			
-			setHitbox(50,90);
+			setHitbox(45,90);
 			//variables for acceleration and gravity
 			a = new Point();
 			v = new Point();
@@ -104,8 +109,11 @@ package entities
 					state = IDLE_RIGHT;
 				}
 			}
+			//check if colliding with crate
+			var c:Crate = collide("crate", x,y) as Crate;
 			//check for jumping
-			if (Input.check("up") ) jump();//TODO have to play animation while in jump state
+			jumpDelay -= FP.elapsed;
+			if (Input.check("up") && jumpDelay <= 0) jump(c);//TODO have to play animation while in jump state
 			
 			if (state == JUMP_LEFT) {
 				graphic = sprPlayerJumpUpLeft;
@@ -113,8 +121,6 @@ package entities
 				if (sprPlayerJumpUpLeft.frameCount >= 14) {
 					
 				}
-				
-				
 			}
 			
 			//check if idle
@@ -130,27 +136,40 @@ package entities
 			a.y = GRAVITY;
 			v.y += a.y;
 			
-			//check if colliding with crate
-			var c:Crate = collide("crate", x,y) as Crate;
 			
-			//if (!c) y += v.y * FP.elapsed;
-			 y += v.y * FP.elapsed;
+			
+			//apply physics
+			y += v.y * FP.elapsed;
+			
 			//collision checks
 			if (y + this.height > FP.screen.height-PLATFORM_HEIGHT) {
 				v.y = 0;
 				y = FP.screen.height - PLATFORM_HEIGHT - height;
+				
+			}else if (c) {
+				//TODO checking for left side only
+				if (c.x < (x + width - 10) && (c.x+c.width > x + 10)  &&(y + this.height > FP.screen.height-PLATFORM_HEIGHT-c.height-4)) {
+					v.y = 0;
+					y = FP.screen.height - PLATFORM_HEIGHT - height - c.height -5;
+				}
 			}
-			//apply physics
-			
 			
 			//trace(state);
 			
 			super.update();
 		}
 		
-		protected function jump():void {
+		protected function jump(c:Entity):void {
+			if (c != null) {
+				if ((y + height >= FP.screen.height - PLATFORM_HEIGHT - c.height-5)) {
+					v.y = -JUMP;
+					jumpDelay = +JUMP_DELAY;
+				}
+			} 
 			if ((y + height >= FP.screen.height - PLATFORM_HEIGHT)) {
 				v.y = -JUMP;
+				jumpDelay = JUMP_DELAY;
+				
 			}else {
 				if (state == IDLE_LEFT || state == WALKING_LEFT) {
 					state = JUMP_LEFT;

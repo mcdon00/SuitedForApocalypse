@@ -24,7 +24,7 @@ package
 		private const SPEED:Number = 150;
 		private const NUM_OF_LAMPS:Number = 7;
 		private const NUM_OF_CRATES:Number = 5;
-		private const ZOMBIE_SPAWN_POINTS:Array = [1300, 1900, 2700, 3500];
+		private const ZOMBIE_SPAWN_POINTS:Array = [1350, 1950, 2750, 3450];
 		
 		//------------------------------------------------PROPERTIES
 		//variableto hold background image
@@ -40,8 +40,6 @@ package
 		public var entCrate:Crate;
 		public var aryEntCrate:Array;
 		public var numOfCrates:int;
-		
-		
 		
 		//------------------------------------------------CONSTRUCTOR
 		public function GameWorld() 
@@ -74,6 +72,11 @@ package
 			// create the player entity
 			entPlayer = new Player(300, 374);
 			
+			//create the zombie entities
+			aryEntZombies = spawnZombies(1);
+			entZombie = new Zombie(400, 374, Zombie.TYPE_TSHIRT_ZOMBIE);
+			
+			
 			// define the inputs for left and right movement
 			Input.define("left", Key.A, Key.LEFT);
 			Input.define("right",Key.D,Key.RIGHT);
@@ -84,8 +87,13 @@ package
 			addGraphic(imgBackground);
 			//add the player to the stage
 			add(entPlayer);
+			//add each of the zombies
+			for (var i:int = 0; i < aryEntZombies.length; i++) {
+				//add(aryEntZombies[i]);
+			}
+			add(entZombie);
 			//add each of the lamps to the stage
-			for (var i:int = 0; i < aryEntLamp.length-1; i++) {
+			for (i = 0; i < aryEntLamp.length-1; i++) {
 				add(aryEntLamp[i]);
 				
 			}
@@ -99,26 +107,35 @@ package
 		//------------------------------------------------GAMELOOP
 		
 		override public function update():void {
+			//trace(aryEntZombies[0].x + " : " + aryEntZombies[0].y );
+			//trace(Math.abs(imgBackground.x) +  entPlayer.x);
+	
+			
+			
+			
 			//TODO check for escape key, if pressed send back to main menu
-				//spawnZombies(4);
 				//crate/player collision detection
 				var c:Crate = entPlayer.collide("crate", entPlayer.x, entPlayer.y) as Crate;
-				var isCollide:Boolean = false;
+				var isCollideLeft:Boolean = false;
+				var isCollideRight:Boolean = false;
 				if (c != null) {
-					trace(c.y + "crate y");
-					trace(entPlayer.y + entPlayer.height);
-					//TODO still need to allow y while x is being stopped
-					if (c && entPlayer.y + entPlayer.height != c.y) {
-						isCollide = true;
+					if (c && ((entPlayer.y + entPlayer.height) > c.y +15)) {
+					
+						if ((c.x < entPlayer.x + entPlayer.width)) {
+							isCollideLeft = true;
+						}
+						if ((c.x + c.width >= entPlayer.x)&&(c.x < entPlayer.x)) {
+							isCollideRight = true;
+						}
+						
 					}
 				}
 				
 				
 				if (Input.check("right")) {
-					
 					//check for end of map, if not at end move the map under the player
 					if (!(entPlayer.x + entPlayer.width >= imgBackground.x +imgBackground.width -50)) {
-						if (!isCollide){
+						if (!isCollideLeft){
 							//move the map with the player movement
 							imgBackground.x -= SPEED * FP.elapsed;
 							//move each of the lamps with the player movement
@@ -133,6 +150,11 @@ package
 							for (i = 0; i < numOfCrates; i++) {
 								aryEntCrate[i].x -= SPEED * FP.elapsed;
 							}
+							
+							//move zombies with map
+							for (i = 0; i < aryEntZombies.length; i++) {
+								aryEntZombies[i].x -= SPEED * FP.elapsed;
+							}
 						}
 					}
 				}
@@ -140,25 +162,30 @@ package
 				if (Input.check("left")) {
 					//check for end of map, if not at end move the map under the player
 					if (!(entPlayer.x <= imgBackground.x + 75)) {
-						//move the map with the player movement
-						imgBackground.x += SPEED * FP.elapsed;
-						entLamp.x += SPEED * FP.elapsed;
-						//move each of the lamps with the player movement
-						for (i = 0; i < aryEntLamp.length - 1; i++) {
-							aryEntLamp[i].x += SPEED * FP.elapsed;
-						}
-						//move each of the zombie spawn points with the player movement
-						for (i = 0; i < ZOMBIE_SPAWN_POINTS.length - 1; i++) {
-							ZOMBIE_SPAWN_POINTS[i] += SPEED * FP.elapsed;
-						}
-						//move the crates with the map
-						for (i = 0; i < numOfCrates; i++) {
-							aryEntCrate[i].x += SPEED * FP.elapsed;
+						if (!isCollideRight){
+							//move the map with the player movement
+							imgBackground.x += SPEED * FP.elapsed;
+							entLamp.x += SPEED * FP.elapsed;
+							//move each of the lamps with the player movement
+							for (i = 0; i < aryEntLamp.length - 1; i++) {
+								aryEntLamp[i].x += SPEED * FP.elapsed;
+							}
+							//move each of the zombie spawn points with the player movement
+							for (i = 0; i < ZOMBIE_SPAWN_POINTS.length - 1; i++) {
+								ZOMBIE_SPAWN_POINTS[i] += SPEED * FP.elapsed;
+							}
+							//move the crates with the map
+							for (i = 0; i < numOfCrates; i++) {
+								aryEntCrate[i].x += SPEED * FP.elapsed;
+							}
+							//move zombies with map
+							for (i = 0; i < aryEntZombies.length; i++) {
+								aryEntZombies[i].x += SPEED * FP.elapsed;
+							}
+							
 						}
 					}
 				}
-				//trace(this.imgBackground.x+ entPlayer.x);
-				//entPlayer.colliding();
 				
 			super.update();
 		}
@@ -176,15 +203,14 @@ package
 			for (var i:int = 0; i < ZOMBIE_SPAWN_POINTS.length; i++) 
 			{
 				var distanceFromSpawn:Number = Math.abs(playerXMiddle - ZOMBIE_SPAWN_POINTS[i]);
-				if (distanceFromSpawn < 500) {
-					trace(distanceFromSpawn + ": "+i);
+				if (distanceFromSpawn > 500) {
+					for (var j:int = 0; j < numToSpawn ; j++) 
+					{
+						entZombie = new Zombie(ZOMBIE_SPAWN_POINTS[i], 374, Zombie.TYPE_TSHIRT_ZOMBIE);
+						aryEntZombies.push(entZombie);
+					}
 				}
 			}
-			
-			trace(imgBackground.width);
-			//trace(distanceFromSpawn);
-			entZombie = new Zombie(500, 374, Zombie.TYPE_TSHIRT_ZOMBIE);
-			
 			return aryEntZombies;
 		}
 		//function to generate random locations, used for obstacles
@@ -198,15 +224,13 @@ package
 			var aryLocations:Array = new Array();
 			for (var j:int = 0; j < numOfLocations; j++) 
 			{
-				posX = Math.floor(Math.random() * range) * entWidth;
-				while (posX < FP.screen.width) {
-					posX = Math.floor(Math.random() * range) * entWidth;
-				}
-				
+				posX = 800+ (Math.floor(Math.random() * range)) * entWidth;
+				trace(posX);
+				//TODO have to fix bbefore 800, can't do them separetly must be at teh same time 
 				for (var i:int = 0; i < aryPastLocations.length; i++) 
 				{
-					while (aryPastLocations[i] == posX) {
-						posX = Math.floor(Math.random() * range) * entWidth;
+					while (aryPastLocations[i] == posX || posX < FP.screen.width) {
+						posX = 800+ (Math.floor(Math.random() * range)) * entWidth;
 					}						
 				}
 				aryPastLocations.push(posX);
