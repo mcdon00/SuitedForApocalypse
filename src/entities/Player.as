@@ -36,6 +36,8 @@ package entities
 		private const GRAVITY:Number = 9.8;
 		private const PLATFORM_HEIGHT:Number = 136;
 		
+		private const ATTACK_DELAY:Number = .5;
+		
 		
 		//------------------------------------------------PROPERTIES
 		protected var sprPlayerBreathRight:Spritemap = new Spritemap(PLAYER_BREATH_RIGHT, 42, 100);
@@ -47,6 +49,7 @@ package entities
 		protected var a:Point;
 		protected var v:Point;
 		protected var jumpDelay:Number;
+		protected var attackDelay:Number;
 		
 		//-------------------------------------------------CONSTRUCTOR
 		public function Player(x:Number,y:Number) 
@@ -54,6 +57,7 @@ package entities
 			super(x, y);
 			type = "player";
 			jumpDelay = 0;
+			attackDelay = ATTACK_DELAY;
 			var aryAnimation:Array = new Array();
 				for (i= 0; i < 15; i++) 
 			{
@@ -92,6 +96,7 @@ package entities
 		//-------------------------------------------------GAME LOOP
 		override public function update():void {
 			//check for left movement
+			attackDelay += FP.elapsed;
 			if (state != JUMP_LEFT || state != JUMP_RIGHT ) {
 				if (Input.check("left")) {
 					state = WALKING_LEFT;
@@ -141,38 +146,48 @@ package entities
 			a.y = GRAVITY;
 			v.y += a.y;
 			
-			
-			
 			//apply physics
 			y += v.y * FP.elapsed;
 			
 			//collision checks
+			//check for touching ground
 			if (y + this.height > FP.screen.height-PLATFORM_HEIGHT) {
 				v.y = 0;
 				y = FP.screen.height - PLATFORM_HEIGHT - height;
 				
+				//check if touching zombie while on ground
+				if (z) {
+					if (Input.check(Key.SPACE)) {
+						//TODO add attack animation
+					}
+				}
 			}else if (c) {
+				//check if touching crate top
 				if (c.x < (x + width - 10) && (c.x+c.width > x + 10)  &&(y + this.height > FP.screen.height-PLATFORM_HEIGHT-c.height+2)) {
 					v.y = 0;
 					y = FP.screen.height - PLATFORM_HEIGHT - height - c.height +1;
 				}
 			}else if (z) {
+				//check if touching zombie top
 				if ((z.x < (x + width - 20) && (z.x+z.width > x + 20)  &&(y + this.height > FP.screen.height-PLATFORM_HEIGHT-z.height))) {
 					v.y = 0;
 					y = FP.screen.height - PLATFORM_HEIGHT - height - z.height;
 				}
 			}
 			
-			//trace(state);
+			
 			
 			super.update();
 		}
-		
+		//-------------------------------------------------METHODS
+	
 		protected function jump(c:Entity):void {
 			if (c != null) {
-				if ((y + height >= FP.screen.height - PLATFORM_HEIGHT - c.height-5)) {
-					v.y = -JUMP;
-					jumpDelay = +JUMP_DELAY;
+				if (c.x +10 <= x + width && c.x+c.width -10 >= x) {				
+					if ((y + height >= FP.screen.height - PLATFORM_HEIGHT - c.height-5)) {
+						v.y = -JUMP;
+						jumpDelay = +JUMP_DELAY;
+					}
 				}
 			} 
 			if ((y + height >= FP.screen.height - PLATFORM_HEIGHT)) {
@@ -190,16 +205,17 @@ package entities
 			
 			
 		}
-		public function colliding(gameWorld:World):void 
-		{
-			//trace(gameWorld.x);
-			//check if colliding with crate
-			//var c:Crate = collide("crate", x,y) as Crate;
-			// collide checks for any intersecting instances of crate
-			//if (c) {
-				//
+		//public function knockBack():void {
+			//v.x = SPEED;
+			//sprZombiePlaceHolder.color = 0xff0000;
+			//if (player.x > x) {
+				//x -= (v.x * 16) * FP.elapsed;  
+			//}else {
+				//x += (v.x * 16) * FP.elapsed;  
 			//}
-		}
+			//
+		//}
+		
 	}
 
 }
