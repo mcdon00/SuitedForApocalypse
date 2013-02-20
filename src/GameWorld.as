@@ -147,14 +147,14 @@ package
 						entZombie = aryEntZombies[j];
 					}
 				}
-				trace(entZombie.x + "--------------" + this.classCount(Zombie));
+				//trace(entZombie.x + "--------------" + this.classCount(Zombie));
 			}else {
-				trace(this.classCount(Zombie));
+				//trace(this.classCount(Zombie));
 			}
 			
 			if (this.classCount(Zombie) <= 0) {
 				timeToSpawn += FP.elapsed;
-				trace(timeToSpawn);
+				//trace(timeToSpawn);
 				if (timeToSpawn>=5){
 					aryEntZombies.concat(spawnZombies(numOfZombies));
 					var playerXMiddle:Number = entPlayer.x + (entPlayer.width / 2);
@@ -167,14 +167,12 @@ package
 								 add(aryEntZombies[i]);
 								 trace("ADDED" + aryEntZombies[i].x);
 							}
-							
-							
 						}
 						
 					}
 					timeToSpawn = 0;
 				}
-				trace(this.classCount(Zombie));
+				//trace(this.classCount(Zombie));
 			}
 			
 			
@@ -261,6 +259,7 @@ package
 				for (var i:int = 0; i < aryPastLocations.length; i++) 
 				{
 					//TODO sometimes locations are still the same
+					//MIGHT BE DUE TO THE LOCATIONS BEING GENERATED ON MAIN MENU THEN WHEN GAME WORLD IS LOADED
 					while (aryPastLocations[i] == posX) {
 						trace("DUP------------------" + posX);
 						posX = 800 + (Math.floor(Math.random() * range)) * entWidth;

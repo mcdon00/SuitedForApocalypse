@@ -78,6 +78,7 @@ package entities
 			}
 			
 			
+			
 			sprZombiePlaceHolder.play();
 			hitDelay += FP.elapsed;
 			//check for distance away from player
@@ -173,6 +174,16 @@ package entities
 		}
 		
 		//------------------------------------------------PUBLIC METHODS
+		public override function removed():void {
+			// when the zombie is added back to the world he is added with his old position then moved to a the new spawn location
+			// when the zombie is removed from the world reset his position back to his old position
+			//this could be a problem though, make sure that his old position is where he will actually be respawned
+			trace("GOODBYE" + x);
+		}
+		public override function added():void {
+			trace("HELLO" + x);
+		}
+		
 		public function attackMovement():void {
 
 			if (playerXMiddle < x) {
