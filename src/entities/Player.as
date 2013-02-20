@@ -211,7 +211,7 @@ package entities
 			
 			
 		}
-		
+
 		//public function knockBack():void {
 			//v.x = SPEED;
 			//sprZombiePlaceHolder.color = 0xff0000;

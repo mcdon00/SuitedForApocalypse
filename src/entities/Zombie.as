@@ -22,7 +22,7 @@ package entities
 		private const HIT_DELAY:Number = .5;
 		private const TOTAL_HEALTH:Number = 100;
 		private const HEALTH_DEP:Number = 25;
-		
+
 		
 		//------------------------------------------------PROPERTIES
 		protected var sprZombiePlaceHolder:Spritemap = new Spritemap(ZOMBIE_PLACEHOLDER, 36, 93);
@@ -40,6 +40,7 @@ package entities
 		public var hitDelay:Number;
 		public var myHealth:Number;
 		public var myBackground:Image;
+
 		
 		//------------------------------------------------CONSTRUCTOR
 		
@@ -63,6 +64,7 @@ package entities
 			v.x = SPEED;
 			hitDelay = HIT_DELAY;
 			graphic = sprZombiePlaceHolder;
+
 			
 		}
 		//------------------------------------------------GAME LOOP
@@ -77,7 +79,6 @@ package entities
 			
 			
 			sprZombiePlaceHolder.play();
-			
 			hitDelay += FP.elapsed;
 			//check for distance away from player
 			playerXMiddle = player.x + (player.width / 2);
@@ -147,11 +148,11 @@ package entities
 								knockBack(SPEED);
 								hitDelay = 0;
 							}
+
 						}
 					}
 					
 				}
-			
 			}else if (distanceFromMe <= 40 &&(Input.check(Key.SPACE))){	//TODO remove the distance checking here
 				if (player.x< x && distanceFromMe <= 25) {
 					if (hitDelay >= HIT_DELAY) {

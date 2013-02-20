@@ -24,6 +24,7 @@ package
 		private const SPEED:Number = 150;
 		private const NUM_OF_LAMPS:Number = 7;
 		private const NUM_OF_CRATES:Number = 10;
+
 		
 		
 		
@@ -50,7 +51,7 @@ package
 		
 		//timer for new wave of zombies
 		protected var timeToSpawn:Number;
-		
+
 		//------------------------------------------------CONSTRUCTOR
 		public function GameWorld() 
 		{
@@ -62,7 +63,7 @@ package
 			aryEntZombies = new Array();
 			aryZombieSpawnPoints = new Array();
 			numOfZombies = 1; //time 4 (spawn points)
-			
+
 			// create and populate and array of lamp entity
 			var locationX:int = 300;
 			for (var i:int = 0; i < NUM_OF_LAMPS; i++) {
@@ -115,6 +116,7 @@ package
 			for (var i:int = 0; i < aryEntZombies.length; i++) {
 				add(aryEntZombies[i]);
 				//trace("ADD ZOMBIE-----"+aryEntZombies[i].x);
+
 			}
 			//add(entZombie);
 			//add(entCrate);
@@ -254,9 +256,7 @@ package
 			for (var j:int = 0; j < numOfLocations; j++) 
 			{
 				posX = 800 + (Math.floor(Math.random() * range)) * entWidth;
-				
-				
-				
+
 				//TODO space them apart further to fix being able to jump on the side of boxes when they are close together
 				for (var i:int = 0; i < aryPastLocations.length; i++) 
 				{
