@@ -20,7 +20,7 @@ package entities
 		private const MAX_MOVE_TIME:int = 3;
 		private const SPEED:Number = 100;
 		private const HIT_DELAY:Number = .5;
-		private const TOTAL_HEALTH:Number = 100;
+		public const TOTAL_HEALTH:Number = 100;
 		private const HEALTH_DEP:Number = 25;
 
 		
@@ -40,12 +40,16 @@ package entities
 		public var hitDelay:Number;
 		public var myHealth:Number;
 		public var myBackground:Image;
+		public var origPosX:Number;
+		public var aryCZombies:Array;
+		public var healthInc:Number;
 
 		
 		//------------------------------------------------CONSTRUCTOR
 		
 		public function Zombie(x:Number,y:Number,myType:String,myPlayer:Player,map:Image) 
 		{
+			origPosX = x;
 			myBackground = map;
 			myHealth = TOTAL_HEALTH;
 			player = myPlayer;
@@ -64,6 +68,8 @@ package entities
 			v.x = SPEED;
 			hitDelay = HIT_DELAY;
 			graphic = sprZombiePlaceHolder;
+			aryCZombies = new Array();
+			healthInc = 1;
 
 			
 		}
@@ -72,8 +78,10 @@ package entities
 			sprZombiePlaceHolder.color = 0xffffff;
 			// check if health is depleted
 			if (myHealth <= 0) {
-				//TODO setup death animation, besure to allow for animation to complete before he is removed
+				//TODO setup death animation, be sure to allow for animation to complete before he is removed
 				//also check if he is near any crates, he will enter the crate if he is beside it
+				//possibly have his position move in the opposite direction of him falling, as if is feet are swept
+				//from under him, or like rotating him from his center
 				world.remove(this);
 			}
 			
@@ -86,7 +94,6 @@ package entities
 			var distanceFromMe:Number = Math.abs(playerXMiddle - (x + width/2));
 			
 			//TODO create conditions for movement
-			//TODO fanout on spawn
 			
 			if (distanceFromMe < 100) {
 				attackMovement();
@@ -128,44 +135,59 @@ package entities
 			}
 			
 			
+			//if player is colliding with more than one
+			aryCZombies = [];
+			player.collideInto(Zombie.TYPE_TSHIRT_ZOMBIE, player.x, player.y, aryCZombies);
+			
+			
+			
 			//--------------------------- being attacked
-			if (distanceFromMe <= 40 && !(isCollideLeft || isCollideRight)) {//TODO remove the distance checking here
+			if ((isCollideLeft || isCollideRight)) {
 				
 				
 				if (Input.check(Key.SPACE)) {
 					if (player.x < x && distanceFromMe <= 25) {
 						if (player.FACING_RIGHT) {
 							if (hitDelay >= HIT_DELAY) {
-								myHealth -= HEALTH_DEP;
-								knockBack(SPEED);
-								hitDelay = 0;
+								if (aryCZombies[0] == this) {
+									myHealth -= HEALTH_DEP;
+									knockBack(SPEED);
+									hitDelay = 0;
+								}
+								
 							}
 						}
 						
 					}else if (player.x > x && distanceFromMe <= 40) {
 						if (player.FACING_LEFT) {
 							if (hitDelay >= HIT_DELAY) {
-								myHealth -= HEALTH_DEP;
-								knockBack(SPEED);
-								hitDelay = 0;
+								if (aryCZombies[0] == this) {
+									myHealth -= HEALTH_DEP;
+									knockBack(SPEED);
+									hitDelay = 0;
+								}
 							}
 
 						}
 					}
 					
 				}
-			}else if (distanceFromMe <= 40 &&(Input.check(Key.SPACE))){	//TODO remove the distance checking here
+			}else if ((Input.check(Key.SPACE))){
 				if (player.x< x && distanceFromMe <= 25) {
 					if (hitDelay >= HIT_DELAY) {
-						myHealth -= HEALTH_DEP;
-						sprZombiePlaceHolder.color = 0xff0000;
-						hitDelay = 0;
+						if (aryCZombies[0] == this) {
+							myHealth -= HEALTH_DEP;
+							sprZombiePlaceHolder.color = 0xff0000;
+							hitDelay = 0;
+						}
 					}
 				}else if (player.x> x && distanceFromMe <= 40) {
 					if (hitDelay >= HIT_DELAY) {
-						myHealth -= HEALTH_DEP;
-						sprZombiePlaceHolder.color = 0xff0000;
-						hitDelay = 0;
+						if (aryCZombies[0] == this) {
+							myHealth -= HEALTH_DEP;
+							sprZombiePlaceHolder.color = 0xff0000;
+							hitDelay = 0;
+						}
 					}
 				}
 			}
@@ -175,6 +197,7 @@ package entities
 		
 		//------------------------------------------------PUBLIC METHODS
 		public override function removed():void {
+			x = origPosX;
 			// when the zombie is added back to the world he is added with his old position then moved to a the new spawn location
 			// when the zombie is removed from the world reset his position back to his old position
 			//this could be a problem though, make sure that his old position is where he will actually be respawned
@@ -182,6 +205,9 @@ package entities
 		}
 		public override function added():void {
 			trace("HELLO" + x);
+			myHealth = TOTAL_HEALTH * healthInc;
+			trace("MYHEALTH"+myHealth);
+			healthInc += 0.5;
 		}
 		
 		public function attackMovement():void {
@@ -262,6 +288,10 @@ package entities
 				}
 			}
 			return false;
+		}
+		
+		public function addHealth(amount:Number) {
+			myHealth = TOTAL_HEALTH * amount;
 		}
 		
 	}
