@@ -21,7 +21,6 @@ package entities
 		private const SPEED:Number = 100;
 		private const HIT_DELAY:Number = .5;
 		private const ATTACK_DELAY:Number = 4;
-		
 		public const TOTAL_HEALTH:Number = 100;
 		private const HEALTH_DEP:Number = 25;
 
@@ -47,6 +46,7 @@ package entities
 		public var aryCZombies:Array;
 		public var healthInc:Number;
 		public var isAttacking:Boolean;
+
 
 		
 		//------------------------------------------------CONSTRUCTOR
@@ -155,8 +155,6 @@ package entities
 			
 			
 			//--------------------------- being attacked
-			
-			//TODO knockback isnt working anymore
 			if ((isCollideLeft || isCollideRight)) {
 				
 				
@@ -182,6 +180,7 @@ package entities
 									knockBack(SPEED);
 									hitDelay = 0;
 									//trace("OUCH LEFT");
+
 								}
 							}
 
@@ -231,6 +230,8 @@ package entities
 		public override function added():void {
 			trace("HELLO" + x);
 			myHealth = TOTAL_HEALTH * healthInc;
+			trace("MYHEALTH"+myHealth);
+
 			healthInc += 0.5;
 		}
 		
@@ -311,6 +312,10 @@ package entities
 				}
 			}
 			return false;
+		}
+		
+		public function addHealth(amount:Number):void {
+			myHealth = TOTAL_HEALTH * amount;
 		}
 		
 	}

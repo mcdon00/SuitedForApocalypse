@@ -24,7 +24,9 @@ package
 		private const FLOOR:Number = FP.screen.height - 175;
 		private const SPEED:Number = 150;
 		private const NUM_OF_LAMPS:Number = 6;
+
 		private const NUM_OF_CRATES:Number = 5;
+
 		
 		//------------------------------------------------PROPERTIES
 		//variableto hold background image
@@ -68,6 +70,7 @@ package
 			aryEntZombies = new Array();
 			aryZombieSpawnPoints = new Array();
 			numOfZombies = 60; 
+
 
 			// create and populate an array of lamp entity
 			var locationX:int = 300;
@@ -138,8 +141,6 @@ package
 		
 		override public function update():void {
 		
-			
-			
 			//check if all zombies are eliminated
 			//trace(this.classCount(Zombie));
 			
