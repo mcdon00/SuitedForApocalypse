@@ -9,7 +9,7 @@ package entities
 	
 	/**
 	 * ...
-	 * @author sean
+	 * @author Nathan
 	 */
 	
 	public class Crate extends Entity 

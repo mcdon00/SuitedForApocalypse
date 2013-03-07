@@ -7,6 +7,7 @@ package entities
 	import net.flashpunk.utils.Input;
 	import net.flashpunk.utils.Key;
 	import net.flashpunk.World;
+		import flash.display.BitmapData;
 	
 	/**
 	 * ...
@@ -40,6 +41,7 @@ package entities
 		private const PLATFORM_HEIGHT:Number = 136;
 		
 		private const ATTACK_DELAY:Number = .5;
+		public static const HEALTH:Number = 200;
 		
 		
 		//------------------------------------------------PROPERTIES
@@ -53,6 +55,8 @@ package entities
 		protected var v:Point;
 		protected var jumpDelay:Number;
 		protected var attackDelay:Number;
+		
+		public var myHealth:Number = HEALTH;
 		
 		//-------------------------------------------------CONSTRUCTOR
 		public function Player(x:Number,y:Number) 
@@ -124,6 +128,8 @@ package entities
 			}
 			//check if colliding with crate
 			var c:Crate = collide("crate", x, y) as Crate;
+			var aryCCrates:Array = [];
+			collideInto("crate", x, y, aryCCrates);
 			var z:Zombie = collide(Zombie.TYPE_TSHIRT_ZOMBIE, x, y) as Zombie;
 			//check for jumping
 			jumpDelay -= FP.elapsed;
@@ -167,12 +173,6 @@ package entities
 						//TODO add attack animation
 					}
 				}
-			}else if (c) {
-				//check if touching crate top
-				if (c.x < (x + width - 10) && (c.x+c.width > x + 10)  &&(y + this.height > FP.screen.height-PLATFORM_HEIGHT-c.height+2)) {
-					v.y = 0;
-					y = FP.screen.height - PLATFORM_HEIGHT - height - c.height +1;
-				}
 			}else if (z) {
 				//check if touching zombie top
 				if ((z.x < (x + width - 20) && (z.x+z.width > x + 20)  &&(y + this.height > FP.screen.height-PLATFORM_HEIGHT-z.height))) {
@@ -181,7 +181,17 @@ package entities
 				}
 			}
 			
-			
+			//check for obstacle collision
+			for (var i:int = 0; i < aryCCrates.length; i++) 
+			{
+				//check if touching crate top
+				if (!(y + this.height > FP.screen.height-PLATFORM_HEIGHT)) {
+					if (aryCCrates[i].x < (x + width - 10) && (aryCCrates[i].x+aryCCrates[i].width > x + 10)  &&(y + this.height > FP.screen.height-PLATFORM_HEIGHT-aryCCrates[i].height+2)) {
+						v.y = 0;
+						y = FP.screen.height - PLATFORM_HEIGHT - height - aryCCrates[i].height +1;
+					}
+				}
+			}
 			
 			super.update();
 		}
