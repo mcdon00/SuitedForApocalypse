@@ -3,6 +3,8 @@ package
 	import entities.Crate;
 	import entities.Player;
 	import entities.PlayerHealthBar;
+	import entities.ScreenOverlay;
+	import entities.Timer;
 	import entities.Zombie;
 	import net.flashpunk.Entity;
 	import net.flashpunk.utils.Input;
@@ -11,6 +13,7 @@ package
 	import net.flashpunk.FP;
 	import net.flashpunk.graphics.*;
 	import entities.Lamp;
+
 	
 	/**
 	 * ...
@@ -24,9 +27,7 @@ package
 		private const FLOOR:Number = FP.screen.height - 175;
 		private const SPEED:Number = 150;
 		private const NUM_OF_LAMPS:Number = 6;
-
-		private const NUM_OF_CRATES:Number = 5;
-
+		private const NUM_OF_CRATES:Number = 2;
 		
 		//------------------------------------------------PROPERTIES
 		//variableto hold background image
@@ -54,6 +55,18 @@ package
 		
 		//player health bar
 		protected var healthBar:PlayerHealthBar;
+		
+		//overlay class
+		protected var overlay:ScreenOverlay;
+		public var gameover:Boolean;
+		
+		protected var waveNum:Number;
+		private var callOnce:Boolean;
+		
+		// survival time 
+		public var survivalTime:Number;
+		public var displayTimer:Timer;
+	
 
 		//------------------------------------------------CONSTRUCTOR
 		public function GameWorld() 
@@ -62,6 +75,12 @@ package
 		}
 		
 		override public function begin():void {
+			survivalTime = 0;
+			displayTimer = new Timer(0, 0);
+			
+			
+			
+			gameover = true;
 			timeToSpawn = 0;
 			imgBackground = new Image(BACKGROUND_IMG);
 			
@@ -69,13 +88,12 @@ package
 			
 			aryEntZombies = new Array();
 			aryZombieSpawnPoints = new Array();
-			numOfZombies = 60; 
-
+			numOfZombies = 20; 
 
 			// create and populate an array of lamp entity
 			var locationX:int = 300;
 			for (var i:int = 0; i < NUM_OF_LAMPS; i++) {
-				entLamp = new Lamp(locationX, 180);
+				entLamp = new Lamp(locationX, 185);
 				aryEntLamp.push(entLamp);
 				locationX += 800;
 			}
@@ -135,19 +153,54 @@ package
 				add(aryEntLamp[i]);
 				
 			}
+			
+			//init overlay class
+			overlay = new ScreenOverlay(this);
+			
+			add(overlay);
+			
+			waveNum = 1;
+			callOnce = true;
+			
+			add(displayTimer);
 		}
 		
 		//------------------------------------------------GAMELOOP
 		
 		override public function update():void {
+			
+			
+		if (gameover && waveNum == 1) {
+			timeToSpawn += FP.elapsed;
+			overlay.callNewWave(waveNum);
+			if (timeToSpawn >= 3) {
+				overlay.removeOverlay();
+				gameover = false;
+				timeToSpawn = 0;
+			}
+			
+		}
 		
+		// check if player has died, if so kill the game
+		if (entPlayer.myHealth <= 0) {
+			overlay.callGameOver(survivalTime);
+			gameover = true;
+		}
+		
+		if (!gameover) {
 			//check if all zombies are eliminated
 			//trace(this.classCount(Zombie));
+			survivalTime += FP.elapsed;
+			displayTimer.setTime(Math.round(survivalTime*100)/100);
 			
 			if (this.classCount(Zombie) <= 0) {
+				
+				if (callOnce) waveNum++;
+				callOnce = false;
+				overlay.callNewWave(waveNum);
 				timeToSpawn += FP.elapsed;
 				trace(timeToSpawn);
-				trace(classCount(Zombie)+ "-----------")
+				trace(classCount(Zombie) + "-----------");
 				if (timeToSpawn >= 5) {
 					numOfZombies *= 2;
 					aryEntZombies = spawnZombies(numOfZombies,aryEntZombies);
@@ -157,12 +210,14 @@ package
 						//add(aryEntZombies[i]);
 						var distanceFromZombie:Number = Math.abs(playerXMiddle - aryEntZombies[i].x);
 						
-						if (distanceFromZombie > 600) {
+						if (distanceFromZombie > 500) {
 							add(aryEntZombies[i]);
 							trace("ADDED" + aryEntZombies[i].x);
 						}						
 					}
 					timeToSpawn = 0;
+					callOnce = true;
+					overlay.removeOverlay();
 				}
 				//trace(this.classCount(Zombie));
 			}
@@ -204,7 +259,6 @@ package
 				//TODO change this to check for multiple zombies instead of just one, player can move past zombies when he pushes back one
 				var z:Zombie = entPlayer.collide(Zombie.TYPE_TSHIRT_ZOMBIE, entPlayer.x, entPlayer.y) as Zombie;
 				if (z != null) {
-					
 					if (z && ((entPlayer.y + entPlayer.height) > z.y +15)) {
 					
 						if ((z.x < entPlayer.x + entPlayer.width-15)&&(z.x > entPlayer.x)) {
@@ -224,6 +278,7 @@ package
 				}
 				
 			super.update();
+			}
 		}
 		//------------------------------------------------PUBLIC METHODS
 		// function to spawn all of the zombies in the stage

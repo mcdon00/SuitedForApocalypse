@@ -17,19 +17,25 @@ package entities
 	{
 		public var playerHealth:Image;
 		public var maxHealth:Number;
+		public var label:Text;
 		
 		public function PlayerHealthBar(x:Number,y:Number,health:Number) 
 		{
 			super(x, y);
 			maxHealth = health;
-			createHealthBar();
+			label = new Text("Player Health");
 			
+			label.size = 20;
+			createHealthBar();
+			label.x = playerHealth.width / 2 - label.width / 2;
+			label.y = playerHealth.height / 2 - label.height / 2;
 		}
 		
 		public function createHealthBar():void {
 			playerHealth = new Image(new BitmapData(maxHealth, 30));
 			playerHealth.color = 0xff0000;
 			graphic = playerHealth;
+			this.addGraphic(label);
 		}
 		
 		public function updateHealthBar(currentHealth:Number):void {

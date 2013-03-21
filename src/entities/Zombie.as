@@ -102,7 +102,7 @@ package entities
 			
 			//TODO create conditions for movement
 			
-			if (distanceFromMe < 100) {
+			if (distanceFromMe < 400) {
 				attackMovement();
 			}else {
 				idleMovement();
@@ -131,7 +131,6 @@ package entities
 			if (p) {
 				attackDelay += FP.elapsed;
 				if (attackDelay > ATTACK_DELAY) {
-					//TODO attack!
 					
 					isAttacking = true;
 					attackDelay = 0;
@@ -155,7 +154,7 @@ package entities
 			
 			
 			//--------------------------- being attacked
-			if ((isCollideLeft || isCollideRight)) {
+			if (!(isCollideLeft || isCollideRight)) {
 				
 				
 				if (Input.check(Key.SPACE)) {
@@ -166,20 +165,20 @@ package entities
 									myHealth -= HEALTH_DEP;
 									knockBack(SPEED);
 									hitDelay = 0;
-									//trace("OUCH RIGHT");
+									trace("OUCH RIGHT");
 								}
-								
 							}
 						}
 						
-					}else if (player.FACING_LEFT) {
-						if (player.x > x && distanceFromMe <= 35) {
+					} 
+					if (player.FACING_LEFT) {
+						if (player.x >= x ) {
 							if (hitDelay >= HIT_DELAY) {
 								if (aryCZombies[0] == this) {
 									myHealth -= HEALTH_DEP;
 									knockBack(SPEED);
 									hitDelay = 0;
-									//trace("OUCH LEFT");
+									trace("OUCH LEFT");
 
 								}
 							}
@@ -189,27 +188,27 @@ package entities
 					
 				}
 			}else if ((Input.check(Key.SPACE))) {
+				//TODO still able to kill all zombies but only when facing left
 				if (player.FACING_RIGHT) {
-					if (player.x < x && distanceFromMe <= 25) {
+					if (player.x <= x && distanceFromMe <= 25) {
 						if (hitDelay >= HIT_DELAY) {
 							if (aryCZombies[0] == this) {
 								myHealth -= HEALTH_DEP;
 								sprZombiePlaceHolder.color = 0xff0000;
-								knockBack(SPEED);
 								hitDelay = 0;
-								//trace("OUCH RIGHT");
+								trace("OUCH RIGHT");
 							}
 						}
 					}
-				}else if (player.FACING_LEFT) {
-					if (player.x > x && distanceFromMe <= 35) {
+				} 
+				if (player.FACING_LEFT) {
+					if (player.x >= x) {
 						if (hitDelay >= HIT_DELAY) {
 							if (aryCZombies[0] == this) {
 								myHealth -= HEALTH_DEP;
 								sprZombiePlaceHolder.color = 0xff0000;
-								knockBack(SPEED);
 								hitDelay = 0;
-								//trace("OUCH LEFT");
+								trace("OUCH LEFT");
 							}
 						}
 					}
@@ -222,11 +221,9 @@ package entities
 		//------------------------------------------------PUBLIC METHODS
 		public override function removed():void {
 			x = origPosX;
-			// when the zombie is added back to the world he is added with his old position then moved to a the new spawn location
-			// when the zombie is removed from the world reset his position back to his old position
-			//this could be a problem though, make sure that his old position is where he will actually be respawned
 			trace("GOODBYE" + x);
 		}
+		
 		public override function added():void {
 			trace("HELLO" + x);
 			myHealth = TOTAL_HEALTH * healthInc;
