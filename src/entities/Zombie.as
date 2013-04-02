@@ -69,7 +69,8 @@ package entities
 			}
 			sprZombie.add("idle", [100], 60, false);
 			sprZombie.add("walk", aryAnimation, 60, true);
-			sprZombie.add("raiseArms", [103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131], 24, false);
+			sprZombie.add("raiseArms", [103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131], 24, false);
+			sprZombie.add("death", [172,173,174,175,176,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199], 100, false);
 			
 			super(x, y);
 			setHitbox(40, 90);
@@ -96,33 +97,31 @@ package entities
 			isAttacking = false;
 			sprZombiePlaceHolder.color = 0xffffff;
 			// check if health is depleted
+			trace(sprZombie.currentAnim);
 			if (myHealth <= 0) {
-				//TODO setup death animation, be sure to allow for animation to complete before he is removed
-				//also check if he is near any crates, he will enter the crate if he is beside it
-				//possibly have his position move in the opposite direction of him falling, as if is feet are swept
-				//from under him, or like rotating him from his center
-				
-				world.remove(this);
+				sprZombie.play("death");
+				if(sprZombie.complete)world.remove(this);
 			}
 			
 			hitDelay += FP.elapsed;
 			//check for distance away from player
 			playerXMiddle = player.x + (player.width / 2);
 			var distanceFromMe:Number = Math.abs(playerXMiddle - (x + width/2));
-			
-			if (distanceFromMe < 100) {
-				if(sprZombie.currentAnim != "walk")sprZombie.play("raiseArms");
-				trace(sprZombie.complete);
-				if ((sprZombie.currentAnim == "walk") ||
-					(sprZombie.complete && sprZombie.currentAnim == "raiseArms")) {
-						
-					attackMovement();
-				}
-				
-			}else {
-				sprZombie.play("idle");
-				idleMovement();
+			if (sprZombie.currentAnim != "death") {
+				if (distanceFromMe < 300) {
+					if(sprZombie.currentAnim != "walk")sprZombie.play("raiseArms");
+					if ((sprZombie.currentAnim == "walk") ||
+						(sprZombie.complete && sprZombie.currentAnim == "raiseArms")) {
+						attackMovement();
+					}
+					
+				}else {
+					sprZombie.play("idle");
+					//if(sprZombie.currentAnim != "walk")sprZombie.play("idle");
+					//idleMovement();
+				}				
 			}
+
 			
 			v.x = SPEED;
 			
@@ -292,11 +291,13 @@ package entities
 					}
 				}else if (moveLeft != 0) {
 					if (!(endMove >= moveLeft)) {
+						sprZombie.flipped = true;
 						if (!isCollideRight) {
 							x -= v.x * FP.elapsed;
 						}
 					}
-				}	
+				}
+				sprZombie.play("walk");
 		}
 		
 		protected function randomBoolean():Boolean

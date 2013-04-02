@@ -88,7 +88,7 @@ package
 			
 			aryEntZombies = new Array();
 			aryZombieSpawnPoints = new Array();
-			numOfZombies = 40; 
+			numOfZombies = 1; 
 
 			// create and populate an array of lamp entity
 			var locationX:int = 300;
