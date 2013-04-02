@@ -41,6 +41,7 @@ package entities
 		public function updateHealthBar(currentHealth:Number):void {
 			var percentHP:Number = currentHealth / maxHealth;
 			playerHealth.scaleX = percentHP;
+			
 		}
 	}
 

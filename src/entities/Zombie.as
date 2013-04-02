@@ -15,6 +15,7 @@ package entities
 		
 		//------------------------------------------------CONSTANTS
 		[Embed(source = '../../assets/zombiePlaceHolder.png')] private const ZOMBIE_PLACEHOLDER:Class;
+		[Embed(source = '../../assets/zombie.png')] private const ZOMBIES:Class;
 		private const ZOMBIE_IDLE:String = "idle";
 		public static const TYPE_TSHIRT_ZOMBIE:String = "tshirtZombie";
 		private const MAX_MOVE_TIME:int = 3;
@@ -27,6 +28,7 @@ package entities
 		
 		//------------------------------------------------PROPERTIES
 		protected var sprZombiePlaceHolder:Spritemap = new Spritemap(ZOMBIE_PLACEHOLDER, 36, 93);
+		protected var sprZombie:Spritemap = new Spritemap(ZOMBIES, 58, 90);
 		protected var startMove:Number;
 		protected var endMove:Number;
 		protected var rndMovement:Number;
@@ -58,9 +60,20 @@ package entities
 			myHealth = TOTAL_HEALTH;
 			player = myPlayer;
 			this.type = myType;
-			sprZombiePlaceHolder.add("zombiePlaceHolder", [1], 100, false);
+			
+			//sprZombie.add("idle", [1], 60, false);
+			var aryAnimation:Array = new Array();
+			for (var i:int= 0; i < 80; i++) 
+			{
+				aryAnimation[i] = i;
+			}
+			sprZombie.add("idle", [100], 60, false);
+			sprZombie.add("walk", aryAnimation, 60, true);
+			sprZombie.add("raiseArms", [103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131], 24, false);
+			
 			super(x, y);
-			setHitbox(30, 90);
+			setHitbox(40, 90);
+			this.originX = -20;
 			isAttacking = false;
 			startMove = 0;
 			endMove = 0;
@@ -72,14 +85,13 @@ package entities
 			v.x = SPEED;
 			hitDelay = HIT_DELAY;
 			attackDelay = ATTACK_DELAY;
-			graphic = sprZombiePlaceHolder;
+			graphic = sprZombie;
 			aryCZombies = new Array();
 			healthInc = 1;
-
-			
 		}
 		//------------------------------------------------GAME LOOP
 		override public function update():void {
+			sprZombie.flipped = false;
 			//reset some properties
 			isAttacking = false;
 			sprZombiePlaceHolder.color = 0xffffff;
@@ -89,22 +101,26 @@ package entities
 				//also check if he is near any crates, he will enter the crate if he is beside it
 				//possibly have his position move in the opposite direction of him falling, as if is feet are swept
 				//from under him, or like rotating him from his center
+				
 				world.remove(this);
 			}
 			
-			
-			
-			sprZombiePlaceHolder.play();
 			hitDelay += FP.elapsed;
 			//check for distance away from player
 			playerXMiddle = player.x + (player.width / 2);
 			var distanceFromMe:Number = Math.abs(playerXMiddle - (x + width/2));
 			
-			//TODO create conditions for movement
-			
-			if (distanceFromMe < 400) {
-				attackMovement();
+			if (distanceFromMe < 100) {
+				if(sprZombie.currentAnim != "walk")sprZombie.play("raiseArms");
+				trace(sprZombie.complete);
+				if ((sprZombie.currentAnim == "walk") ||
+					(sprZombie.complete && sprZombie.currentAnim == "raiseArms")) {
+						
+					attackMovement();
+				}
+				
 			}else {
+				sprZombie.play("idle");
 				idleMovement();
 			}
 			
@@ -233,16 +249,19 @@ package entities
 		}
 		
 		public function attackMovement():void {
-
 			if (playerXMiddle < x) {
+				sprZombie.flipped = true;
 				if (!isCollideRight) {
 					x -= v.x * FP.elapsed;
 				}
+				
 			}else {
 				if (!isCollideLeft) {
 					x += v.x * FP.elapsed;
 				}
+				
 			}
+			sprZombie.play("walk");
 		}
 		public function idleMovement():void{
 			//randomly move zombie while in idle state;

@@ -88,7 +88,7 @@ package
 			
 			aryEntZombies = new Array();
 			aryZombieSpawnPoints = new Array();
-			numOfZombies = 20; 
+			numOfZombies = 40; 
 
 			// create and populate an array of lamp entity
 			var locationX:int = 300;
@@ -183,8 +183,15 @@ package
 		
 		// check if player has died, if so kill the game
 		if (entPlayer.myHealth <= 0) {
-			overlay.callGameOver(survivalTime);
-			gameover = true;
+			remove(healthBar);
+			entPlayer.sprPlayer.play("death");
+			entPlayer.state = "dead";
+			
+			if (entPlayer.sprPlayer.frame >= 132) {
+				overlay.callGameOver(survivalTime);
+				gameover = true;
+			}
+			
 		}
 		
 		if (!gameover) {
@@ -270,11 +277,12 @@ package
 				}
 				//move player left and right
 				if (Input.check("right")) {
-					moveWorldRight(SPEED);
+					
+					if(entPlayer.state != "dead")moveWorldRight(SPEED);
 				}
 				
 				if (Input.check("left")) {
-					moveWorldLeft(SPEED);
+					if(entPlayer.state != "dead")moveWorldLeft(SPEED);
 				}
 				
 			super.update();

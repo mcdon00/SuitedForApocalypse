@@ -23,6 +23,7 @@ package entities
 		[Embed(source = '../../assets/playerWalkRight.png')] private const PLAYER_WALK_RIGHT:Class;
 		[Embed(source = '../../assets/playerWalkLeft.png')] private const PLAYER_WALK_LEFT:Class;
 		[Embed(source = '../../assets/playerJumpUpLeft.png')] private const PLAYER_JUMP_UPLEFT:Class;
+		[Embed(source = '../../assets/playerRight.png')] private const PLAYER:Class;
 		
 		public var FACING_RIGHT:Boolean = true;
 		public var FACING_LEFT:Boolean = false;
@@ -50,13 +51,18 @@ package entities
 		protected var sprPlayerWalkRight:Spritemap = new Spritemap(PLAYER_WALK_RIGHT, 45, 89);
 		protected var sprPlayerWalkLeft:Spritemap = new Spritemap(PLAYER_WALK_LEFT, 61, 90);
 		protected var sprPlayerJumpUpLeft:Spritemap = new Spritemap(PLAYER_JUMP_UPLEFT, 59, 93);
-		protected var state:String;
+		public var sprPlayer:Spritemap = new Spritemap(PLAYER, 70, 96);
+		public var state:String;
 		protected var a:Point;
 		protected var v:Point;
 		protected var jumpDelay:Number;
 		protected var attackDelay:Number;
 		
 		public var myHealth:Number = HEALTH;
+		
+		private var prevAnimIndex:int = -1;
+		private var onCrate;
+		
 		
 		//-------------------------------------------------CONSTRUCTOR
 		public function Player(x:Number,y:Number) 
@@ -65,53 +71,76 @@ package entities
 			type = "player";
 			jumpDelay = 0;
 			attackDelay = ATTACK_DELAY;
+			
 			var aryAnimation:Array = new Array();
-				for (i= 0; i < 15; i++) 
+			var ex:int = 0;
+			//-------------------------------new
+			for (var i:int= 0; i < 39; i++) 
 			{
-				aryAnimation[i] = i;
+				aryAnimation[ex] = i;
+				ex++;
 			}
-			sprPlayerJumpUpLeft.add("playerJumpUpLeft", aryAnimation, 100, false);
-			for (var i:int = 0; i < 59; i++) 
+			sprPlayer.add("idle", aryAnimation, 24, true);
+			ex = 0;
+			var aryAnimation1:Array = new Array();
+			for (i= 39; i < 86; i++) 
 			{
-				aryAnimation[i] = i;
-			}
-			
-			sprPlayerBreathRight.add("playerBreathRight", aryAnimation, 60, true);
-			sprPlayerBreathLeft.add("playerBreathLeft", aryAnimation, 60, true);
-			
-			for (i= 0; i < 129; i++) 
-			{
-				aryAnimation[i] = i;
+				aryAnimation1[ex] = i;
+				ex++;
 			}
 			
-			sprPlayerWalkRight.add("playerWalkRight", aryAnimation, 100, true);
-			sprPlayerWalkLeft.add("playerWalkLeft",aryAnimation,100,true);
+			sprPlayer.add("walk", aryAnimation1, 60, true);
+			//-------------------------------/new
 			
-			graphic = sprPlayerBreathRight;
+			sprPlayer.add("attack", [116], 60, false);
+			sprPlayer.add("jump", [85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 108, 109, 110, 111], 40, false);
+			sprPlayer.add("death", [124, 125, 126, 127, 128, 129, 130, 131, 132], 20, false);
 			
 			state = IDLE_RIGHT;
 			Input.define("left", Key.A, Key.LEFT);
 			Input.define("right", Key.D, Key.RIGHT);
 			Input.define("up", Key.UP, Key.W);
 			
-			setHitbox(45,90);
+			setHitbox(60, 90);
+			
 			//variables for acceleration and gravity
 			a = new Point();
 			v = new Point();
 			
+			onCrate = false;
+			graphic = sprPlayer;
 		}
 		//-------------------------------------------------GAME LOOP
 		override public function update():void {
+			sprPlayer.flipped = false;
 			//check for left movement
 			attackDelay += FP.elapsed;
-			if (state != JUMP_LEFT || state != JUMP_RIGHT ) {
+			if (state != JUMP_LEFT && state != JUMP_RIGHT && state != "dead") {
 				if (Input.check("left")) {
+					
 					FACING_LEFT = true;
 					FACING_RIGHT = false;
 					state = WALKING_LEFT;
-					graphic = sprPlayerWalkLeft;
-					sprPlayerWalkLeft.play("playerWalkLeft");
-				}else  if(Input.released("left")){
+					sprPlayer.flipped = true;
+					
+					//trace(prevAnimIndex);
+					//if (prevAnimIndex >= 0) {
+						//sprPlayer.play("walk");
+						//sprPlayer.setAnimFrame("walk", prevAnimIndex);
+						//
+						//sprPlayer.play("walk");
+						//trace(sprPlayer.currentAnim);
+						//trace(sprPlayer.frame+"before");
+						//sprPlayer.frame = prevAnimIndex;
+						//trace(sprPlayer.frame+"after");
+						//prevAnimIndex = -1;
+					//}else {
+						//
+					//}
+					
+					sprPlayer.play("walk");
+					
+				}else if(Input.released("left")){
 					state = IDLE_LEFT;
 				}
 				
@@ -120,12 +149,12 @@ package entities
 					FACING_LEFT = false;
 					FACING_RIGHT = true;
 					state = WALKING_RIGHT;
-					graphic = sprPlayerWalkRight;
-					sprPlayerWalkRight.play("playerWalkRight");
+					sprPlayer.play("walk");
 				}else if(Input.released("right")) {
 					state = IDLE_RIGHT;
 				}
 			}
+			
 			//check if colliding with crate
 			var c:Crate = collide("crate", x, y) as Crate;
 			var aryCCrates:Array = [];
@@ -134,24 +163,30 @@ package entities
 			//check for jumping
 			jumpDelay -= FP.elapsed;
 			if (!z) {
-				if (Input.check("up") && jumpDelay <= 0) jump(c);//TODO have to play animation while in jump state
+				if (Input.check("up") && jumpDelay <= 0) jump(c);
 			}
 			
-			if (state == JUMP_LEFT) {
-				graphic = sprPlayerJumpUpLeft;
-				sprPlayerJumpUpLeft.play("playerJumpUpLeft");
-				if (sprPlayerJumpUpLeft.frameCount >= 14) {
-					
+			if (state == JUMP_RIGHT) {
+				sprPlayer.play("jump");
+			}else if (state == JUMP_LEFT ) {
+				sprPlayer.flipped = true;
+				sprPlayer.play("jump");
+			}
+			
+			
+			//check if idle
+			if (state != JUMP_RIGHT && state != JUMP_LEFT) {
+				if (state == IDLE_RIGHT) {
+					sprPlayer.play("idle");					
+				}else if (state == IDLE_LEFT) {
+					sprPlayer.flipped = true;
+					sprPlayer.play("idle");
 				}
 			}
 			
-			//check if idle
-			if (state == IDLE_RIGHT) {
-				graphic = sprPlayerBreathRight;
-				sprPlayerBreathRight.play("playerBreathRight");
-			}else if (state == IDLE_LEFT) {
-				graphic = sprPlayerBreathLeft;
-				sprPlayerBreathLeft.play("playerBreathLeft");
+			if (Input.pressed(Key.SPACE)) {
+				prevAnimIndex = sprPlayer.index;
+				sprPlayer.play("attack");
 			}
 			
 			//update physics
@@ -167,17 +202,33 @@ package entities
 				v.y = 0;
 				y = FP.screen.height - PLATFORM_HEIGHT - height;
 				
-				//check if touching zombie while on ground
-				if (z) {
-					if (Input.check(Key.SPACE)) {
-						//TODO add attack animation
-					}
+				if (state == JUMP_RIGHT) {
+					state = IDLE_RIGHT;
+				}else if (state == JUMP_LEFT){
+					state = IDLE_LEFT;
 				}
-			}else if (z) {
+				
+			//}else if (z) {
 				//check if touching zombie top
-				if ((z.x < (x + width - 20) && (z.x+z.width > x + 20)  &&(y + this.height > FP.screen.height-PLATFORM_HEIGHT-z.height))) {
-					v.y = 0;
-					y = FP.screen.height - PLATFORM_HEIGHT - height - z.height;
+				//if ((z.x < (x + width - 20) && (z.x+z.width > x + 20)  &&(y + this.height > FP.screen.height-PLATFORM_HEIGHT-z.height))) {
+					//v.y = 0;
+					//y = FP.screen.height - PLATFORM_HEIGHT - height - z.height;
+					//if (state == JUMP_RIGHT) {
+						//state = IDLE_RIGHT;
+					//}else if (state == JUMP_LEFT){
+						//state = IDLE_LEFT;
+					//}
+				//}
+			}else {
+				//TODO this condition is overriding idle when touching crate top, making it so walk anim doesn't play
+				if (state == WALKING_RIGHT || state == IDLE_RIGHT) {
+					state = JUMP_RIGHT;
+				}else if (state == WALKING_LEFT || state == IDLE_LEFT){
+					state = JUMP_LEFT;
+				}else if (Input.check("left")) {
+					state = JUMP_LEFT;
+				}else if (Input.check("right")) {
+					state = JUMP_RIGHT;
 				}
 			}
 			
@@ -189,6 +240,14 @@ package entities
 					if (aryCCrates[i].x < (x + width - 10) && (aryCCrates[i].x+aryCCrates[i].width > x + 10)  &&(y + this.height > FP.screen.height-PLATFORM_HEIGHT-aryCCrates[i].height+2)) {
 						v.y = 0;
 						y = FP.screen.height - PLATFORM_HEIGHT - height - aryCCrates[i].height +1;
+						onCrate = true;
+						if (state == JUMP_RIGHT) {
+							state = IDLE_RIGHT;
+						}else if (state == JUMP_LEFT){
+							state = IDLE_LEFT;
+						}
+					}else {
+						onCrate = false;
 					}
 				}
 			}
@@ -205,18 +264,11 @@ package entities
 						jumpDelay = +JUMP_DELAY;
 					}
 				}
-			} 
+			}
+			
 			if ((y + height >= FP.screen.height - PLATFORM_HEIGHT)) {
 				v.y = -JUMP;
-				jumpDelay = JUMP_DELAY;
-				
-			}else {
-				if (state == IDLE_LEFT || state == WALKING_LEFT) {
-					state = JUMP_LEFT;
-					
-				}else if (state == IDLE_RIGHT || state == WALKING_RIGHT) {
-					state = JUMP_RIGHT;
-				}
+				jumpDelay = JUMP_DELAY;	
 			}
 			
 			
