@@ -97,6 +97,7 @@ package
 				aryEntLamp.push(entLamp);
 				locationX += 800;
 			}
+			
 			trace(imgBackground.width + "------------");
 			
 			//create the crate obstacles
@@ -235,12 +236,12 @@ package
 					if (aryEntZombies[index].x > entPlayer.centerX) {
 						trace("attacking right");
 						moveWorldLeft(400);
-						entPlayer.myHealth -= 5;
+						entPlayer.myHealth -= 10;
 						healthBar.updateHealthBar(entPlayer.myHealth);
 					}else {
 						trace("attacking left");
 						moveWorldRight(400);
-						entPlayer.myHealth -= 5;
+						entPlayer.myHealth -= 10;
 						healthBar.updateHealthBar(entPlayer.myHealth);
 					}
 				}
@@ -263,7 +264,6 @@ package
 				}
 				
 				//player/zombie collision detection
-				//TODO change this to check for multiple zombies instead of just one, player can move past zombies when he pushes back one
 				var z:Zombie = entPlayer.collide(Zombie.TYPE_TSHIRT_ZOMBIE, entPlayer.x, entPlayer.y) as Zombie;
 				if (z != null) {
 					if (z && ((entPlayer.y + entPlayer.height) > z.y +15)) {
@@ -277,11 +277,8 @@ package
 				}
 				//move player left and right
 				if (Input.check("right")) {
-					
 					if(entPlayer.state != "dead")moveWorldRight(SPEED);
-				}
-				
-				if (Input.check("left")) {
+				}else if (Input.check("left")) {
 					if(entPlayer.state != "dead")moveWorldLeft(SPEED);
 				}
 				
@@ -346,8 +343,8 @@ package
 			{
 				zombies[j].x = myLocations[j];
 			}
-			
 			aryEntZombies = zombies;
+			entPlayer.setZombies(aryEntZombies);
 			return zombies;
 		}
 		//function to generate random locations, used for obstacles
@@ -447,5 +444,6 @@ package
 				}
 			}
 		}
+		
 	}
 }

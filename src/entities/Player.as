@@ -8,6 +8,7 @@ package entities
 	import net.flashpunk.utils.Key;
 	import net.flashpunk.World;
 		import flash.display.BitmapData;
+		import net.flashpunk.Sfx;
 	
 	/**
 	 * ...
@@ -18,12 +19,8 @@ package entities
 	{
 		
 		//------------------------------------------------CONSTANTS
-		[Embed(source = '../../assets/playerBreathRight.png')] private const PLAYER_BREATH_RIGHT:Class;
-		[Embed(source = '../../assets/playerBreathLeft.png')] private const PLAYER_BREATH_LEFT:Class;
-		[Embed(source = '../../assets/playerWalkRight.png')] private const PLAYER_WALK_RIGHT:Class;
-		[Embed(source = '../../assets/playerWalkLeft.png')] private const PLAYER_WALK_LEFT:Class;
-		[Embed(source = '../../assets/playerJumpUpLeft.png')] private const PLAYER_JUMP_UPLEFT:Class;
 		[Embed(source = '../../assets/playerRight.png')] private const PLAYER:Class;
+		[Embed(source = '../../assets/sound/shotGun.mp3')] public const SHOTGUN_FIRE:Class;
 		
 		public var FACING_RIGHT:Boolean = true;
 		public var FACING_LEFT:Boolean = false;
@@ -46,12 +43,10 @@ package entities
 		
 		
 		//------------------------------------------------PROPERTIES
-		protected var sprPlayerBreathRight:Spritemap = new Spritemap(PLAYER_BREATH_RIGHT, 42, 100);
-		protected var sprPlayerBreathLeft:Spritemap = new Spritemap(PLAYER_BREATH_LEFT, 49.45, 89.95);
-		protected var sprPlayerWalkRight:Spritemap = new Spritemap(PLAYER_WALK_RIGHT, 45, 89);
-		protected var sprPlayerWalkLeft:Spritemap = new Spritemap(PLAYER_WALK_LEFT, 61, 90);
-		protected var sprPlayerJumpUpLeft:Spritemap = new Spritemap(PLAYER_JUMP_UPLEFT, 59, 93);
+
 		public var sprPlayer:Spritemap = new Spritemap(PLAYER, 70, 96);
+		public var sfxShoot:Sfx = new Sfx(SHOTGUN_FIRE);
+		
 		public var state:String;
 		protected var a:Point;
 		protected var v:Point;
@@ -61,7 +56,8 @@ package entities
 		public var myHealth:Number = HEALTH;
 		
 		private var prevAnimIndex:int = -1;
-		private var onCrate;
+		public var aryZombies:Array;
+		public var zombieToHit:Zombie;
 		
 		
 		//-------------------------------------------------CONSTRUCTOR
@@ -74,7 +70,7 @@ package entities
 			
 			var aryAnimation:Array = new Array();
 			var ex:int = 0;
-			//-------------------------------new
+			
 			for (var i:int= 0; i < 39; i++) 
 			{
 				aryAnimation[ex] = i;
@@ -90,7 +86,6 @@ package entities
 			}
 			
 			sprPlayer.add("walk", aryAnimation1, 60, true);
-			//-------------------------------/new
 			
 			sprPlayer.add("attack", [116], 60, false);
 			sprPlayer.add("jump", [85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 108, 109, 110, 111], 40, false);
@@ -101,13 +96,13 @@ package entities
 			Input.define("right", Key.D, Key.RIGHT);
 			Input.define("up", Key.UP, Key.W);
 			
-			setHitbox(60, 90);
+			setHitbox(50, 90);
+			
 			
 			//variables for acceleration and gravity
 			a = new Point();
 			v = new Point();
 			
-			onCrate = false;
 			graphic = sprPlayer;
 		}
 		//-------------------------------------------------GAME LOOP
@@ -116,7 +111,17 @@ package entities
 			//check for left movement
 			attackDelay += FP.elapsed;
 			if (state != JUMP_LEFT && state != JUMP_RIGHT && state != "dead") {
-				if (Input.check("left")) {
+				
+				if (Input.check("right")) {
+					FACING_LEFT = false;
+					FACING_RIGHT = true;
+					state = WALKING_RIGHT;
+					sprPlayer.play("walk");
+				}else if(Input.released("right")) {
+					state = IDLE_RIGHT;
+				}else if(Input.released("left")){
+					state = IDLE_LEFT;
+				}else if (Input.check("left")) {
 					
 					FACING_LEFT = true;
 					FACING_RIGHT = false;
@@ -140,18 +145,6 @@ package entities
 					
 					sprPlayer.play("walk");
 					
-				}else if(Input.released("left")){
-					state = IDLE_LEFT;
-				}
-				
-				//check for right movement
-				if (Input.check("right")) {
-					FACING_LEFT = false;
-					FACING_RIGHT = true;
-					state = WALKING_RIGHT;
-					sprPlayer.play("walk");
-				}else if(Input.released("right")) {
-					state = IDLE_RIGHT;
 				}
 			}
 			
@@ -183,9 +176,33 @@ package entities
 					sprPlayer.play("idle");
 				}
 			}
+			//check if zombies are in range
+			for (var j:int = 0; j < aryZombies.length ; j++) 
+			{	
+				
+				var distanceFromMe:Number = Math.abs(aryZombies[j].centerX - (this.centerX));
+				if (distanceFromMe < 100 ) {
+					zombieToHit = aryZombies[j];
+				}
+			}
 			
 			if (Input.pressed(Key.SPACE)) {
-				prevAnimIndex = sprPlayer.index;
+				//prevAnimIndex = sprPlayer.index;
+				if (zombieToHit != null) {
+					if (zombieToHit.centerX > this.centerX) {
+						if (this.FACING_RIGHT) {
+							
+							zombieToHit.isHit = true;
+						}
+					}else if (zombieToHit.centerX < this.centerX) {
+						if (this.FACING_LEFT) {
+
+							zombieToHit.isHit = true;
+						}
+					}
+					zombieToHit = null;
+				}
+				sfxShoot.play();
 				sprPlayer.play("attack");
 			}
 			
@@ -207,18 +224,13 @@ package entities
 				}else if (state == JUMP_LEFT){
 					state = IDLE_LEFT;
 				}
-				
-			//}else if (z) {
-				//check if touching zombie top
-				//if ((z.x < (x + width - 20) && (z.x+z.width > x + 20)  &&(y + this.height > FP.screen.height-PLATFORM_HEIGHT-z.height))) {
-					//v.y = 0;
-					//y = FP.screen.height - PLATFORM_HEIGHT - height - z.height;
-					//if (state == JUMP_RIGHT) {
-						//state = IDLE_RIGHT;
-					//}else if (state == JUMP_LEFT){
-						//state = IDLE_LEFT;
-					//}
+			}else if (c) {
+				//if (state == JUMP_RIGHT) {
+					//state = IDLE_RIGHT;
+				//}else if (state == JUMP_LEFT){
+					//state = IDLE_LEFT;
 				//}
+			
 			}else {
 				//TODO this condition is overriding idle when touching crate top, making it so walk anim doesn't play
 				if (state == WALKING_RIGHT || state == IDLE_RIGHT) {
@@ -240,14 +252,11 @@ package entities
 					if (aryCCrates[i].x < (x + width - 10) && (aryCCrates[i].x+aryCCrates[i].width > x + 10)  &&(y + this.height > FP.screen.height-PLATFORM_HEIGHT-aryCCrates[i].height+2)) {
 						v.y = 0;
 						y = FP.screen.height - PLATFORM_HEIGHT - height - aryCCrates[i].height +1;
-						onCrate = true;
 						if (state == JUMP_RIGHT) {
 							state = IDLE_RIGHT;
 						}else if (state == JUMP_LEFT){
 							state = IDLE_LEFT;
 						}
-					}else {
-						onCrate = false;
 					}
 				}
 			}
@@ -270,21 +279,10 @@ package entities
 				v.y = -JUMP;
 				jumpDelay = JUMP_DELAY;	
 			}
-			
-			
 		}
-
-		//public function knockBack():void {
-			//v.x = SPEED;
-			//sprZombiePlaceHolder.color = 0xff0000;
-			//if (player.x > x) {
-				//x -= (v.x * 16) * FP.elapsed;  
-			//}else {
-				//x += (v.x * 16) * FP.elapsed;  
-			//}
-			//
-		//}
-		
+		public function setZombies(myZombies:Array):void {
+			aryZombies = myZombies;
+		}
 	}
 
 }
