@@ -4,6 +4,7 @@ package entities
 	import net.flashpunk.Entity;
 	import net.flashpunk.FP;
 	import net.flashpunk.graphics.*;
+	import net.flashpunk.tweens.sound.SfxFader;
 	import net.flashpunk.utils.Input;
 	import net.flashpunk.utils.Key;
 	import net.flashpunk.World;
@@ -46,6 +47,8 @@ package entities
 
 		public var sprPlayer:Spritemap = new Spritemap(PLAYER, 70, 96);
 		public var sfxShoot:Sfx = new Sfx(SHOTGUN_FIRE);
+		public var sfxShoot2:Sfx = new Sfx(SHOTGUN_FIRE);
+		public var sfxfader:SfxFader = new SfxFader(sfxShoot);
 		
 		public var state:String;
 		protected var a:Point;
@@ -98,11 +101,10 @@ package entities
 			
 			setHitbox(50, 90);
 			
-			
+			sfxShoot.volume = 0.7;
 			//variables for acceleration and gravity
 			a = new Point();
 			v = new Point();
-			
 			graphic = sprPlayer;
 		}
 		//-------------------------------------------------GAME LOOP
@@ -112,10 +114,21 @@ package entities
 			attackDelay += FP.elapsed;
 			if (state != JUMP_LEFT && state != JUMP_RIGHT && state != "dead") {
 				
-				if (Input.check("right")) {
-					FACING_LEFT = false;
-					FACING_RIGHT = true;
-					state = WALKING_RIGHT;
+				if (Input.check("right") && !Input.check("left")) {
+					
+					if (Input.check("left")) {
+						FACING_LEFT = true;
+						FACING_RIGHT = false;
+						state = WALKING_LEFT;
+						sprPlayer.flipped = true;
+					}else {
+						sprPlayer.flipped = false;
+						FACING_LEFT = false;
+						FACING_RIGHT = true;
+						state = WALKING_RIGHT;
+					}
+					
+					
 					sprPlayer.play("walk");
 				}else if(Input.released("right")) {
 					state = IDLE_RIGHT;
@@ -123,25 +136,17 @@ package entities
 					state = IDLE_LEFT;
 				}else if (Input.check("left")) {
 					
-					FACING_LEFT = true;
-					FACING_RIGHT = false;
-					state = WALKING_LEFT;
-					sprPlayer.flipped = true;
-					
-					//trace(prevAnimIndex);
-					//if (prevAnimIndex >= 0) {
-						//sprPlayer.play("walk");
-						//sprPlayer.setAnimFrame("walk", prevAnimIndex);
-						//
-						//sprPlayer.play("walk");
-						//trace(sprPlayer.currentAnim);
-						//trace(sprPlayer.frame+"before");
-						//sprPlayer.frame = prevAnimIndex;
-						//trace(sprPlayer.frame+"after");
-						//prevAnimIndex = -1;
-					//}else {
-						//
-					//}
+					if (Input.check("right")) {	
+						FACING_LEFT = false;
+						FACING_RIGHT = true;
+						state = WALKING_RIGHT;
+						sprPlayer.flipped = false;
+					}else {
+						FACING_LEFT = true;
+						FACING_RIGHT = false;
+						state = WALKING_LEFT;
+						sprPlayer.flipped = true;
+					}
 					
 					sprPlayer.play("walk");
 					
@@ -177,34 +182,77 @@ package entities
 				}
 			}
 			//check if zombies are in range
+			var zombsLeft:Array = [];
+			var zombsRight:Array = [];
+			//loop through each of the zombies in the map
 			for (var j:int = 0; j < aryZombies.length ; j++) 
-			{	
-				
+			{	// get the distance from each bewtween him and the player
 				var distanceFromMe:Number = Math.abs(aryZombies[j].centerX - (this.centerX));
-				if (distanceFromMe < 100 ) {
-					zombieToHit = aryZombies[j];
-				}
-			}
-			
-			if (Input.pressed(Key.SPACE)) {
-				//prevAnimIndex = sprPlayer.index;
-				if (zombieToHit != null) {
-					if (zombieToHit.centerX > this.centerX) {
-						if (this.FACING_RIGHT) {
-							
-							zombieToHit.isHit = true;
+					if (distanceFromMe < 150) {
+						trace(aryZombies[j].v.x);
+						if (aryZombies[j].centerX <= this.centerX) {
+							//var zombieToHitLeft:Zombie = aryZombies[j];
+							zombsLeft.push(aryZombies[j]);
 						}
-					}else if (zombieToHit.centerX < this.centerX) {
-						if (this.FACING_LEFT) {
-
-							zombieToHit.isHit = true;
+						if (aryZombies[j].centerX >= this.centerX) {
+							zombsRight.push(aryZombies[j]);
+							//var zombieToHitRight:Zombie = aryZombies[j];
 						}
 					}
-					zombieToHit = null;
-				}
-				sfxShoot.play();
-				sprPlayer.play("attack");
 			}
+			
+			// of the zombies that are within range on the right side find the closest
+			for (var k:int = 0; k < zombsRight.length; k++) 
+			{
+				for (var q:int = 0; q < zombsRight.length; q++) {
+					if (zombsRight[k] != zombsRight[q]) {
+						if (zombsRight[k].centerX < zombsRight[q].centerX) {
+							var zombieToHitRight:Zombie = zombsRight[k];
+						}
+					}
+					
+					if (zombieToHitRight == null) zombieToHitRight = zombsRight[0];
+				}
+				
+			}
+			// of the zombies that are within range on the left side find the closest
+			for (var k:int = 0; k < zombsLeft.length; k++) 
+			{
+				for (var q:int = 0; q < zombsLeft.length; q++) {
+					if (zombsLeft[k] != zombsLeft[q]) {
+						if (zombsLeft[k].centerX > zombsLeft[q].centerX) {
+							var zombieToHitLeft:Zombie = zombsLeft[k];
+						}
+					}
+					
+					if (zombieToHitLeft == null) zombieToHitLeft = zombsLeft[0];
+				}
+				
+			}
+			//--------------------------------------attacking
+			if (Input.pressed(Key.SPACE)) {
+				if (!(sfxShoot.playing ) || sfxShoot.position >= 1) {
+					if (zombieToHitRight != null) {
+						if (!(centerY < zombieToHitRight.y)) {
+							if (this.FACING_RIGHT  && !zombieToHitRight.isCollideRight) {
+								zombieToHitRight.isHit = true;
+							}
+						}
+					}
+					if (zombieToHitLeft != null) {
+						if (!(centerY < zombieToHitLeft.y)) {
+							if (this.FACING_LEFT  && !zombieToHitLeft.isCollideLeft) {
+								zombieToHitLeft.isHit = true;
+							}	
+						}
+					}
+					sfxShoot.play();
+					//sfxfader.crossFade(sfxShoot2, false, 2);
+					sprPlayer.play("attack");
+				}
+				
+			}
+			
 			
 			//update physics
 			a.y = GRAVITY;

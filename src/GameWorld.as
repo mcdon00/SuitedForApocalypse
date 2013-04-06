@@ -13,6 +13,7 @@ package
 	import net.flashpunk.FP;
 	import net.flashpunk.graphics.*;
 	import entities.Lamp;
+	import net.flashpunk.Sfx;
 
 	
 	/**
@@ -24,12 +25,16 @@ package
 		//------------------------------------------------CONSTANTS
 		//const for background image
 		[Embed(source = '../assets/map.png')] private const BACKGROUND_IMG:Class;
+		//const for background music
+		[Embed(source = '../assets/sound/backgroundMusic.mp3')] public const MUSIC:Class;
+		
 		private const FLOOR:Number = FP.screen.height - 175;
-		private const SPEED:Number = 150;
+		private const SPEED:Number = 175;
 		private const NUM_OF_LAMPS:Number = 6;
-		private const NUM_OF_CRATES:Number = 2;
+		private const NUM_OF_CRATES:Number = 0;
 		
 		//------------------------------------------------PROPERTIES
+		public var sfxMusic:Sfx = new Sfx(MUSIC);
 		//variableto hold background image
 		public var imgBackground:Image;
 		//lamp,player zombie objects
@@ -88,7 +93,7 @@ package
 			
 			aryEntZombies = new Array();
 			aryZombieSpawnPoints = new Array();
-			numOfZombies = 1; 
+			numOfZombies = 40; 
 
 			// create and populate an array of lamp entity
 			var locationX:int = 300;
@@ -105,7 +110,7 @@ package
 			 //create and populate and array of crate entities
 			locationX = 800;
 			numOfCrates = 0;
-			var random:Number = 8 + Math.floor(Math.random() * NUM_OF_CRATES);
+			var random:Number = 0 + Math.floor(Math.random() * NUM_OF_CRATES);
 			var arr:Array = rndLocationsX(random,80,40); 
 			for (i = 0; i < random; i++) {
 				numOfCrates++;
@@ -164,13 +169,15 @@ package
 			callOnce = true;
 			
 			add(displayTimer);
+			sfxMusic.loop();
+			sfxMusic.volume = 0.8;
 		}
 		
 		//------------------------------------------------GAMELOOP
 		
 		override public function update():void {
 			
-			
+		
 		if (gameover && waveNum == 1) {
 			timeToSpawn += FP.elapsed;
 			overlay.callNewWave(waveNum);
@@ -196,9 +203,11 @@ package
 		}
 		
 		if (!gameover) {
+			entPlayer.sprPlayer.color = 0xffffff;
 			//check if all zombies are eliminated
 			//trace(this.classCount(Zombie));
 			survivalTime += FP.elapsed;
+			//TODO format this time display
 			displayTimer.setTime(Math.round(survivalTime*100)/100);
 			
 			if (this.classCount(Zombie) <= 0) {
@@ -235,13 +244,15 @@ package
 				if (aryEntZombies[index].isAttacking) {
 					if (aryEntZombies[index].x > entPlayer.centerX) {
 						trace("attacking right");
-						moveWorldLeft(400);
-						entPlayer.myHealth -= 10;
+						moveWorldLeft(800);
+						entPlayer.sprPlayer.color = 0xff0000;
+						entPlayer.myHealth -= 5;
 						healthBar.updateHealthBar(entPlayer.myHealth);
 					}else {
 						trace("attacking left");
-						moveWorldRight(400);
-						entPlayer.myHealth -= 10;
+						moveWorldRight(800);
+						entPlayer.sprPlayer.color = 0xff0000;
+						entPlayer.myHealth -= 5;
 						healthBar.updateHealthBar(entPlayer.myHealth);
 					}
 				}
@@ -277,9 +288,19 @@ package
 				}
 				//move player left and right
 				if (Input.check("right")) {
-					if(entPlayer.state != "dead")moveWorldRight(SPEED);
+					
+					if (Input.check("left")) {
+						if(entPlayer.state != "dead")moveWorldLeft(SPEED);
+					}else {
+						if (entPlayer.state != "dead") moveWorldRight(SPEED);
+					}
 				}else if (Input.check("left")) {
-					if(entPlayer.state != "dead")moveWorldLeft(SPEED);
+					
+					if (Input.check("right")) {
+						if(entPlayer.state != "dead")moveWorldRight(SPEED);
+					}else {
+						if (entPlayer.state != "dead") moveWorldLeft(SPEED);
+					}
 				}
 				
 			super.update();

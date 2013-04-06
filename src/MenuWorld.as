@@ -32,13 +32,15 @@ package
 		//------------------------------------------------CONSTRUCTOR
 		public function MenuWorld() 
 		{
-			entPlayBtn = new Button(FP.screen.width/2-90,300,"play");
+			entPlayBtn = new Button(FP.screen.width / 2 - 90, 300, "play");
+			entQuitBtn = new Button(FP.screen.width/2-90,350,"quit");
 			entLamp = new Lamp(100, 168);
 		}
 		override public function begin():void {
 			addGraphic(imgBackground);
 			add(entLamp);
 			add(entPlayBtn);
+			add(entQuitBtn);
 		}
 		//------------------------------------------------GAME LOOP
 		

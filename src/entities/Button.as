@@ -53,7 +53,7 @@ package entities
 						if (btnType == STR_PLAY) FP.world = new GameWorld();
 						//if (btnType == STR_RESUME) FP.world = new GameWorld();
 						//if (btnType == STR_INSTRUCTIONS) FP.world = new GameWorld();
-						//if (btnType == STR_QUIT) FP.world = new GameWorld();
+						if (btnType == STR_QUIT) trace("asdad");
 					}
 				}
 			} 

@@ -5,6 +5,7 @@ package entities
 	import net.flashpunk.FP;
 	import net.flashpunk.graphics.*;
 	import net.flashpunk.Sfx;
+	
 	import net.flashpunk.utils.Input;
 	import net.flashpunk.utils.Key;
 	/**
@@ -16,7 +17,11 @@ package entities
 		
 		//------------------------------------------------CONSTANTS
 		[Embed(source = '../../assets/zombiePlaceHolder.png')] private const ZOMBIE_PLACEHOLDER:Class;
-		[Embed(source = '../../assets/sound/zombieAlerted2.mp3')] public const ALERTED:Class;
+		[Embed(source = '../../assets/sound/attack.mp3')] public const ATTACK_SND:Class;
+		[Embed(source = '../../assets/sound/zombieDeath.mp3')] public const DEATH_SND:Class;
+		[Embed(source = '../../assets/sound/alerted1.mp3')] public const ALERTED_ONE_SND:Class;
+		[Embed(source = '../../assets/sound/alerted2.mp3')] public const ALERTED_TWO_SND:Class;
+		[Embed(source = '../../assets/sound/alerted3.mp3')] public const ALERTED_THREE_SND:Class;
 
 		[Embed(source = '../../assets/zombie.png')] private const ZOMBIES:Class;
 		private const ZOMBIE_IDLE:String = "idle";
@@ -26,12 +31,14 @@ package entities
 		private const HIT_DELAY:Number = .5;
 		private const ATTACK_DELAY:Number = 3;
 		public const TOTAL_HEALTH:Number = 100;
-		private const HEALTH_DEP:Number = 25;
+		private const HEALTH_DEP:Number = 100;
 
 		
 		//------------------------------------------------PROPERTIES
 		// sounds
-		public var sfxAlerted:Sfx = new Sfx(ALERTED);
+		public var sfxAttack:Sfx = new Sfx(ATTACK_SND);
+		public var sfxDeath:Sfx = new Sfx(DEATH_SND);
+		public var arySfxAlerted:Array;
 		
 		protected var sprZombiePlaceHolder:Spritemap = new Spritemap(ZOMBIE_PLACEHOLDER, 36, 93);
 		protected var sprZombie:Spritemap = new Spritemap(ZOMBIES, 58, 90);
@@ -41,7 +48,7 @@ package entities
 		protected var moveLeft:Number;
 		protected var moveRight:Number;
 		protected var c:Crate;
-		protected var v:Point;
+		public var v:Point;
 		protected var playerXMiddle:Number;
 		public var player:Player;
 		public var isCollideLeft:Boolean;
@@ -57,6 +64,7 @@ package entities
 		public var attacked:Boolean;
 		
 		public var isHit:Boolean = false;
+		protected var rndSpeed:int = 0;
 		
 		
 
@@ -65,6 +73,10 @@ package entities
 		
 		public function Zombie(x:Number,y:Number,myType:String,myPlayer:Player,map:Image) 
 		{
+			arySfxAlerted = new Array();
+			arySfxAlerted[0] = new Sfx(ALERTED_ONE_SND);
+			arySfxAlerted[1] = new Sfx(ALERTED_TWO_SND);
+			arySfxAlerted[2] = new Sfx(ALERTED_THREE_SND);
 			origPosX = x;
 			myBackground = map;
 			myHealth = TOTAL_HEALTH;
@@ -100,13 +112,16 @@ package entities
 			v.x = 0;
 			moveLeft = 0;
 			moveRight = 0;
-			v.x = SPEED;
+			rndSpeed = SPEED + Math.floor(Math.random() * 50);
+			v.x = rndSpeed;
+			trace(v.x);
 			hitDelay = HIT_DELAY;
 			attackDelay = ATTACK_DELAY;
 			graphic = sprZombie;
 			aryCZombies = new Array();
 			healthInc = 1;
 			attacked = false;
+			sfxDeath.volume = 8;
 		}
 		//------------------------------------------------GAME LOOP
 		override public function update():void {
@@ -122,150 +137,104 @@ package entities
 			sprZombie.color = 0xffffff;
 			// check if health is depleted
 			if (myHealth <= 0) {
+				sfxDeath.play();
 				sprZombie.play("death");
 				if(sprZombie.complete)world.remove(this);
 			}
-			
-			hitDelay += FP.elapsed;
-			//check for distance away from player
-			playerXMiddle = player.x + (player.width / 2);
-			var distanceFromMe:Number = Math.abs(playerXMiddle - (x + width/2));
-			if (sprZombie.currentAnim != "death" || sprZombie.currentAnim != "attack") {
-				if (distanceFromMe < 300) {
-					if (isAttacking) {
-						attacked = true;
-					}
-					if (attacked) {
-						sfxAlerted.play();
-						sprZombie.play("attack");
-						if (sprZombie.complete) {
-							attacked = false;
+			// do not allow any thing else to happen when the zombie is dead
+			// this is to prevent anything else from trying to take place 
+			if (!myHealth <= 0) {
+				hitDelay += FP.elapsed;
+				//check for distance away from player
+				playerXMiddle = player.x + (player.width / 2);
+				var distanceFromMe:Number = Math.abs(playerXMiddle - (x + width/2));
+				if (sprZombie.currentAnim != "death" || sprZombie.currentAnim != "attack") {
+					if (distanceFromMe < 300) {
+						if (isAttacking) {
+							attacked = true;
 						}
-					}else {
-						if (sprZombie.currentAnim == "idle") sprZombie.play("raiseArms");
+						if (attacked) {
+							sfxAttack.play();
+							sprZombie.play("attack");
+							if (sprZombie.complete) {
+								attacked = false;
+							}
+						}else {
+							if (sprZombie.currentAnim == "idle") {
+								var rndSound:int = Math.floor(Math.random() * 3);
+								arySfxAlerted[rndSound].play();
+								sprZombie.play("raiseArms");
+							} 
+							
+							if ((sprZombie.currentAnim == "walk") ||
+								(sprZombie.complete && sprZombie.currentAnim == "raiseArms") ||
+								(sprZombie.currentAnim == "attack")) {
+								attackMovement();
+							}
+						}
 						
-						if ((sprZombie.currentAnim == "walk") ||
-							(sprZombie.complete && sprZombie.currentAnim == "raiseArms") ||
-							(sprZombie.currentAnim == "attack")) {
-							attackMovement();
-						}
+						//attackMovement();
+					}else {
+						sprZombie.play("idle");
+						
+						//if(sprZombie.currentAnim != "walk")sprZombie.play("idle");
+						if (distanceFromMe > 600) idleMovement();
+						
+						
+					}				
+				}
+				isAttacking = false;
+				
+				v.x = rndSpeed;
+				
+				//----------------------------------collision detection
+				//crate
+				var c:Crate = collide("crate", x, y) as Crate;
+				isCollideLeft = false;
+				isCollideRight = false;
+				if (c != null) {
+					if ((c.x <= x + width) && (c.x > x)) {
+						isCollideLeft = true;
+						//v.x = 0;
+						//x = c.x - width;
+					}else if ((c.x + c.width >= x)) {
+						isCollideRight = true;
 					}
-					
-					//attackMovement();
-				}else {
-					sprZombie.play("idle");
-					
-					//if(sprZombie.currentAnim != "walk")sprZombie.play("idle");
-					//idleMovement();
-				}				
-			}
-			isAttacking = false;
-			
-			v.x = SPEED;
-			
-			//----------------------------------collision detection
-			//crate
-			var c:Crate = collide("crate", x, y) as Crate;
-			isCollideLeft = false;
-			isCollideRight = false;
-			if (c != null) {
-				if ((c.x <= x + width) && (c.x > x)) {
+				}
+				// colliding with player
+				var p:Player = collide("player", x, y) as Player;
+				
+				// ----------attacking
+				if (p) {
+					attackDelay += FP.elapsed;
+					if (attackDelay > ATTACK_DELAY) {
+						isAttacking = true;
+						attackDelay = 0;
+					}
+					v.x = 0;
+				}
+				
+				//edge of map
+				if ((x + width >= myBackground.x +myBackground.width -50)) {
 					isCollideLeft = true;
-					//v.x = 0;
-					//x = c.x - width;
-				}else if ((c.x + c.width >= x)) {
+				}
+				if ((x <= myBackground.x + 75)) {
 					isCollideRight = true;
 				}
-			}
-			// colliding with player
-			var p:Player = collide("player", x, y) as Player;
-			
-			// ----------attacking
-			if (p) {
-				attackDelay += FP.elapsed;
-				if (attackDelay > ATTACK_DELAY) {
-					isAttacking = true;
-					attackDelay = 0;
+				
+				
+				//if player is colliding with more than one
+				aryCZombies = [];
+				player.collideInto(Zombie.TYPE_TSHIRT_ZOMBIE, player.x, player.y, aryCZombies);
+				
+				if (isHit) {
+					myHealth -= HEALTH_DEP;
+					sprZombie.color = 0xff0000;
+					hitDelay = 0;
+					isHit = false;
+					knockBack(SPEED*4);
 				}
-				v.x = 0;
 			}
-			
-			//edge of map
-			if ((x + width >= myBackground.x +myBackground.width -50)) {
-				isCollideLeft = true;
-			}
-			if ((x <= myBackground.x + 75)) {
-				isCollideRight = true;
-			}
-			
-			
-			//if player is colliding with more than one
-			aryCZombies = [];
-			player.collideInto(Zombie.TYPE_TSHIRT_ZOMBIE, player.x, player.y, aryCZombies);
-			
-			if (isHit) {
-				myHealth -= HEALTH_DEP;
-				sprZombie.color = 0xff0000;
-				hitDelay = 0;
-				isHit = false;
-				knockBack(SPEED*4);
-			}
-			
-			
-			//--------------------------- being attacked
-			//if (!(isCollideLeft || isCollideRight)) {
-				//
-				//
-				//if (Input.check(Key.SPACE)) {
-					//if (player.FACING_RIGHT) {
-						//if (player.x < x && distanceFromMe <= 100) {
-							//if (hitDelay >= HIT_DELAY) {
-								//myHealth -= HEALTH_DEP;
-								//knockBack(SPEED*2);
-								//hitDelay = 0;
-								//sprZombie.color = 0xff0000;
-							//}
-						//}
-						//
-					//} 
-					//if (player.FACING_LEFT) {
-						//if (player.x >= x ) {
-							//if (hitDelay >= HIT_DELAY) {
-								//if (aryCZombies[0] == this) {
-									//myHealth -= HEALTH_DEP;
-									//knockBack(SPEED*2);
-									//hitDelay = 0;
-								//}
-							//}
-//
-						//}
-					//}
-					//
-				//}
-			//}else if ((Input.check(Key.SPACE))) {
-				//TODO still able to kill all zombies but only when facing left
-				//if (player.FACING_RIGHT) {
-					//if (player.x <= x && distanceFromMe <= 100) {
-						//if (hitDelay >= HIT_DELAY) {
-							//myHealth -= HEALTH_DEP;
-							//hitDelay = 0;
-							//sprZombie.color = 0xff0000;
-							//trace("OUCH RIGHT");
-						//}
-					//}
-				//} 
-				//if (player.FACING_LEFT) {
-					//if (player.x >= x) {
-						//if (hitDelay >= HIT_DELAY) {
-							//myHealth -= HEALTH_DEP;
-							//sprZombie.color = 0xff0000;
-							//hitDelay = 0;
-							//trace("OUCH LEFT");
-						//}
-					//}
-				//}
-			//}
-			
 			super.update();
 		}
 		
@@ -284,7 +253,7 @@ package entities
 		}
 		
 		public function attackMovement():void {
-			if (playerXMiddle < x) {
+			if (playerXMiddle < centerX) {
 				sprZombie.flipped = true;
 				if (!isCollideRight) {
 					x -= v.x * FP.elapsed;
@@ -313,10 +282,10 @@ package entities
 					startMove = 0;
 					endMove = 0;
 					if (randomBoolean()) {
-						moveRight = Math.floor(Math.random() * 2);
+						moveRight = Math.floor(Math.random() * 4);
 						moveLeft = 0;
 					}else {
-						moveLeft = Math.floor(Math.random() * 2);
+						moveLeft = Math.floor(Math.random() * 4);
 						moveRight = 0;
 					}
 					
