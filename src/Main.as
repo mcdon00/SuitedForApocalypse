@@ -29,7 +29,7 @@ package
 			//init menu and game world objects
 			mainMenu = new MenuWorld();
 			gameWorld = new GameWorld();
-			FP.console.enable();
+			//FP.console.enable();
 			
 		}
 		//------------------------------------------------INIT

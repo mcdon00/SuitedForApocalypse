@@ -33,8 +33,8 @@ package entities
 		private const JUMP_RIGHT:String = "jRight";
 		private const JUMP_LEFT:String = "jLeft";
 		
-		private const JUMP:int = 350;
-		private const JUMP_DELAY:Number = 1.3;
+		private const JUMP:int = 400;
+		private const JUMP_DELAY:Number = 1.5;
 		
 		private const GRAVITY:Number = 9.8;
 		private const PLATFORM_HEIGHT:Number = 136;
@@ -61,6 +61,7 @@ package entities
 		private var prevAnimIndex:int = -1;
 		public var aryZombies:Array;
 		public var zombieToHit:Zombie;
+		public var touchingGround:Boolean;
 		
 		
 		//-------------------------------------------------CONSTRUCTOR
@@ -106,6 +107,7 @@ package entities
 			a = new Point();
 			v = new Point();
 			graphic = sprPlayer;
+			touchingGround = true;
 		}
 		//-------------------------------------------------GAME LOOP
 		override public function update():void {
@@ -114,29 +116,29 @@ package entities
 			attackDelay += FP.elapsed;
 			if (state != JUMP_LEFT && state != JUMP_RIGHT && state != "dead") {
 				
-				if (Input.check("right") && !Input.check("left")) {
+				if (Input.check("right") ) {
 					
-					if (Input.check("left")) {
+					if (Input.check(Key.LEFT) && Input.check(Key.D)) {
 						FACING_LEFT = true;
 						FACING_RIGHT = false;
 						state = WALKING_LEFT;
 						sprPlayer.flipped = true;
+						sprPlayer.play("walk")
 					}else {
 						sprPlayer.flipped = false;
 						FACING_LEFT = false;
 						FACING_RIGHT = true;
 						state = WALKING_RIGHT;
+						sprPlayer.play("walk")
 					}
 					
-					
-					sprPlayer.play("walk");
 				}else if(Input.released("right")) {
 					state = IDLE_RIGHT;
 				}else if(Input.released("left")){
 					state = IDLE_LEFT;
 				}else if (Input.check("left")) {
 					
-					if (Input.check("right")) {	
+					if (Input.check(Key.RIGHT) && Input.check(Key.A)) {	
 						FACING_LEFT = false;
 						FACING_RIGHT = true;
 						state = WALKING_RIGHT;
@@ -148,7 +150,7 @@ package entities
 						sprPlayer.flipped = true;
 					}
 					
-					sprPlayer.play("walk");
+					if(Input.check(Key.A))sprPlayer.play("walk");
 					
 				}
 			}
@@ -188,11 +190,11 @@ package entities
 			for (var j:int = 0; j < aryZombies.length ; j++) 
 			{	// get the distance from each bewtween him and the player
 				var distanceFromMe:Number = Math.abs(aryZombies[j].centerX - (this.centerX));
-					if (distanceFromMe < 150) {
-						trace(aryZombies[j].v.x);
+					if (distanceFromMe < 200) {
 						if (aryZombies[j].centerX <= this.centerX) {
 							//var zombieToHitLeft:Zombie = aryZombies[j];
 							zombsLeft.push(aryZombies[j]);
+							
 						}
 						if (aryZombies[j].centerX >= this.centerX) {
 							zombsRight.push(aryZombies[j]);
@@ -200,18 +202,17 @@ package entities
 						}
 					}
 			}
-			
+			trace(zombsRight.length);
 			// of the zombies that are within range on the right side find the closest
 			for (var k:int = 0; k < zombsRight.length; k++) 
 			{
 				for (var q:int = 0; q < zombsRight.length; q++) {
 					if (zombsRight[k] != zombsRight[q]) {
 						if (zombsRight[k].centerX < zombsRight[q].centerX) {
-							var zombieToHitRight:Zombie = zombsRight[k];
+							if(zombsRight[k].visible)var zombieToHitRight:Zombie = zombsRight[k];
 						}
 					}
-					
-					if (zombieToHitRight == null) zombieToHitRight = zombsRight[0];
+					if (zombieToHitRight == null && zombsRight[0].visible) zombieToHitRight = zombsRight[0];
 				}
 				
 			}
@@ -221,14 +222,16 @@ package entities
 				for (var q:int = 0; q < zombsLeft.length; q++) {
 					if (zombsLeft[k] != zombsLeft[q]) {
 						if (zombsLeft[k].centerX > zombsLeft[q].centerX) {
-							var zombieToHitLeft:Zombie = zombsLeft[k];
+							if(zombsLeft[k].visible)var zombieToHitLeft:Zombie = zombsLeft[k];
 						}
 					}
 					
-					if (zombieToHitLeft == null) zombieToHitLeft = zombsLeft[0];
+					if (zombieToHitLeft == null && zombsLeft[0].visible) zombieToHitLeft = zombsLeft[0];
 				}
 				
 			}
+			
+			
 			//--------------------------------------attacking
 			if (Input.pressed(Key.SPACE)) {
 				if (!(sfxShoot.playing ) || sfxShoot.position >= 1) {
@@ -236,6 +239,7 @@ package entities
 						if (!(centerY < zombieToHitRight.y)) {
 							if (this.FACING_RIGHT  && !zombieToHitRight.isCollideRight) {
 								zombieToHitRight.isHit = true;
+								zombieToHitRight = null;
 							}
 						}
 					}
@@ -243,6 +247,7 @@ package entities
 						if (!(centerY < zombieToHitLeft.y)) {
 							if (this.FACING_LEFT  && !zombieToHitLeft.isCollideLeft) {
 								zombieToHitLeft.isHit = true;
+								zombieToHitLeft = null;
 							}	
 						}
 					}
@@ -266,6 +271,7 @@ package entities
 			if (y + this.height > FP.screen.height-PLATFORM_HEIGHT) {
 				v.y = 0;
 				y = FP.screen.height - PLATFORM_HEIGHT - height;
+				touchingGround = true;
 				
 				if (state == JUMP_RIGHT) {
 					state = IDLE_RIGHT;
@@ -280,6 +286,7 @@ package entities
 				//}
 			
 			}else {
+				touchingGround = false;
 				//TODO this condition is overriding idle when touching crate top, making it so walk anim doesn't play
 				if (state == WALKING_RIGHT || state == IDLE_RIGHT) {
 					state = JUMP_RIGHT;
@@ -300,6 +307,7 @@ package entities
 					if (aryCCrates[i].x < (x + width - 10) && (aryCCrates[i].x+aryCCrates[i].width > x + 10)  &&(y + this.height > FP.screen.height-PLATFORM_HEIGHT-aryCCrates[i].height+2)) {
 						v.y = 0;
 						y = FP.screen.height - PLATFORM_HEIGHT - height - aryCCrates[i].height +1;
+						touchingGround = true;
 						if (state == JUMP_RIGHT) {
 							state = IDLE_RIGHT;
 						}else if (state == JUMP_LEFT){

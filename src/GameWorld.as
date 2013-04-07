@@ -31,7 +31,7 @@ package
 		private const FLOOR:Number = FP.screen.height - 175;
 		private const SPEED:Number = 175;
 		private const NUM_OF_LAMPS:Number = 6;
-		private const NUM_OF_CRATES:Number = 0;
+		private const NUM_OF_CRATES:Number = 5;
 		
 		//------------------------------------------------PROPERTIES
 		public var sfxMusic:Sfx = new Sfx(MUSIC);
@@ -110,7 +110,7 @@ package
 			 //create and populate and array of crate entities
 			locationX = 800;
 			numOfCrates = 0;
-			var random:Number = 0 + Math.floor(Math.random() * NUM_OF_CRATES);
+			var random:Number = 3 + (Math.floor(Math.random() * ((NUM_OF_CRATES - 3) + 1)));
 			var arr:Array = rndLocationsX(random,80,40); 
 			for (i = 0; i < random; i++) {
 				numOfCrates++;
@@ -196,7 +196,7 @@ package
 			entPlayer.state = "dead";
 			
 			if (entPlayer.sprPlayer.frame >= 132) {
-				overlay.callGameOver(survivalTime);
+				overlay.callGameOver(displayTimer.convertToHHMMSS(survivalTime));
 				gameover = true;
 			}
 			
@@ -287,20 +287,10 @@ package
 					}
 				}
 				//move player left and right
-				if (Input.check("right")) {
-					
-					if (Input.check("left")) {
-						if(entPlayer.state != "dead")moveWorldLeft(SPEED);
-					}else {
-						if (entPlayer.state != "dead") moveWorldRight(SPEED);
-					}
-				}else if (Input.check("left")) {
-					
-					if (Input.check("right")) {
-						if(entPlayer.state != "dead")moveWorldRight(SPEED);
-					}else {
-						if (entPlayer.state != "dead") moveWorldLeft(SPEED);
-					}
+				if (Input.check(Key.D) && Input.check("right")) {
+					if (entPlayer.state != "dead") moveWorldRight(SPEED);
+				}else if (Input.check(Key.A) && Input.check("left")) {
+					if (entPlayer.state != "dead") moveWorldLeft(SPEED);
 				}
 				
 			super.update();

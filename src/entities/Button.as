@@ -1,9 +1,12 @@
 package entities 
 {
+	import flash.system.System;
 	import net.flashpunk.Entity;
 	import net.flashpunk.graphics.Image;
 	import net.flashpunk.utils.Input;
 	import net.flashpunk.FP;
+	import net.flashpunk.World;
+	import net.flashpunk.graphics.Graphiclist;
 	
 	/**
 	 * ...
@@ -25,11 +28,13 @@ package entities
 		//-------------------------------------------------PROPERTIES
 		public var imgButton:Image;
 		public var btnType:String;
+		public var menuWorld:MenuWorld;
 		
-		public function Button(x:Number,y:Number,myType:String) 
+		public function Button(x:Number,y:Number,myType:String,menu:MenuWorld) 
 		{
 			super(x, y);
 			btnType = myType;
+			menuWorld = menu;
 		
 			
 			if (btnType == STR_PLAY) imgButton = new Image(PLAY_IMG);
@@ -48,15 +53,18 @@ package entities
 		override public function update():void {
 			
 			if (Input.mousePressed) {
-				if (Input.mouseX >= x && Input.mouseX <= x + width) {
-					if (Input.mouseY >= y && Input.mouseY <= y + height) {
-						if (btnType == STR_PLAY) FP.world = new GameWorld();
-						//if (btnType == STR_RESUME) FP.world = new GameWorld();
-						//if (btnType == STR_INSTRUCTIONS) FP.world = new GameWorld();
-						if (btnType == STR_QUIT) trace("asdad");
+				
+				if ((Input.mouseX >= x && Input.mouseX <= x + width) && (Input.mouseY >= y && Input.mouseY <= y + height)) {
+					if (btnType == STR_PLAY) {
+						FP.world = new GameWorld();
+					}else if (btnType == STR_QUIT) {
+						System.exit(0);
+					}else if (btnType == STR_INSTRUCTIONS) {
+						menuWorld.instVisable = true; 
 					}
 				}
-			} 
+			}
+			super.update();
 		}
 	}
 

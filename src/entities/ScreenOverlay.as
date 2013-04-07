@@ -25,7 +25,7 @@ package entities
 			overLay = new Image(new BitmapData(FP.screen.width, FP.screen.height));
 		}
 		
-		public function callGameOver(time:Number):void {
+		public function callGameOver(time:String):void {
 			
 			text = new Text("Game Over");
 			var surviveText:Text = new Text("Survival Time: " + time);

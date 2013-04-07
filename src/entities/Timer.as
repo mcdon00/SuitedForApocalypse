@@ -36,7 +36,7 @@ package entities
 			timer.text = "Survival Time: " + convertToHHMMSS(time);
 		}
 		
-		function convertToHHMMSS($seconds:Number):String
+		public function convertToHHMMSS($seconds:Number):String
 		{
 			var s:Number = $seconds % 60;
 			var m:Number = Math.floor(($seconds % 3600 ) / 60);
@@ -49,7 +49,7 @@ package entities
 			return hourStr + minuteStr + secondsStr;
 		}
 		 
-		function doubleDigitFormat($num:uint):String
+		public function doubleDigitFormat($num:uint):String
 		{
 			if ($num < 10) 
 			{

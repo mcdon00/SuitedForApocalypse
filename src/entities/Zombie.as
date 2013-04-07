@@ -112,7 +112,7 @@ package entities
 			v.x = 0;
 			moveLeft = 0;
 			moveRight = 0;
-			rndSpeed = SPEED + Math.floor(Math.random() * 50);
+			rndSpeed = SPEED + Math.floor(Math.random() * 80);
 			v.x = rndSpeed;
 			trace(v.x);
 			hitDelay = HIT_DELAY;
@@ -137,6 +137,7 @@ package entities
 			sprZombie.color = 0xffffff;
 			// check if health is depleted
 			if (myHealth <= 0) {
+				isAttacking = false;
 				sfxDeath.play();
 				sprZombie.play("death");
 				if(sprZombie.complete)world.remove(this);
@@ -169,7 +170,9 @@ package entities
 							if ((sprZombie.currentAnim == "walk") ||
 								(sprZombie.complete && sprZombie.currentAnim == "raiseArms") ||
 								(sprZombie.currentAnim == "attack")) {
-								attackMovement();
+									
+								if(distanceFromMe > 75 || player.touchingGround)attackMovement();
+								
 							}
 						}
 						
@@ -205,8 +208,9 @@ package entities
 				var p:Player = collide("player", x, y) as Player;
 				
 				// ----------attacking
+				attackDelay += FP.elapsed;
 				if (p) {
-					attackDelay += FP.elapsed;
+					
 					if (attackDelay > ATTACK_DELAY) {
 						isAttacking = true;
 						attackDelay = 0;
@@ -241,11 +245,13 @@ package entities
 		//------------------------------------------------PUBLIC METHODS
 		public override function removed():void {
 			x = origPosX;
+			this.visible = false;
 			trace("GOODBYE" + x);
 		}
 		
 		public override function added():void {
 			trace("HELLO" + x);
+			this.visible = true;
 			myHealth = TOTAL_HEALTH * healthInc;
 			trace("MYHEALTH"+myHealth);
 
