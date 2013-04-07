@@ -93,7 +93,7 @@ package
 			
 			aryEntZombies = new Array();
 			aryZombieSpawnPoints = new Array();
-			numOfZombies = 40; 
+			numOfZombies = 10; 
 
 			// create and populate an array of lamp entity
 			var locationX:int = 300;
@@ -216,10 +216,9 @@ package
 				callOnce = false;
 				overlay.callNewWave(waveNum);
 				timeToSpawn += FP.elapsed;
-				trace(timeToSpawn);
 				trace(classCount(Zombie) + "-----------");
 				if (timeToSpawn >= 5) {
-					numOfZombies *= 2;
+					numOfZombies = Math.ceil(numOfZombies * 1.5);
 					aryEntZombies = spawnZombies(numOfZombies,aryEntZombies);
 					
 					var playerXMiddle:Number = entPlayer.x + (entPlayer.width / 2);

@@ -143,14 +143,15 @@ package entities
 						FACING_RIGHT = true;
 						state = WALKING_RIGHT;
 						sprPlayer.flipped = false;
+						sprPlayer.play("walk")
 					}else {
 						FACING_LEFT = true;
 						FACING_RIGHT = false;
 						state = WALKING_LEFT;
 						sprPlayer.flipped = true;
+						sprPlayer.play("walk")
 					}
-					
-					if(Input.check(Key.A))sprPlayer.play("walk");
+				
 					
 				}
 			}
@@ -212,7 +213,7 @@ package entities
 							if(zombsRight[k].visible)var zombieToHitRight:Zombie = zombsRight[k];
 						}
 					}
-					if (zombieToHitRight == null && zombsRight[0].visible) zombieToHitRight = zombsRight[0];
+					if (zombieToHitRight == null && zombsRight[q].visible) zombieToHitRight = zombsRight[q];
 				}
 				
 			}
@@ -226,7 +227,7 @@ package entities
 						}
 					}
 					
-					if (zombieToHitLeft == null && zombsLeft[0].visible) zombieToHitLeft = zombsLeft[0];
+					if (zombieToHitLeft == null && zombsLeft[q].visible) zombieToHitLeft = zombsLeft[q];
 				}
 				
 			}
@@ -239,7 +240,6 @@ package entities
 						if (!(centerY < zombieToHitRight.y)) {
 							if (this.FACING_RIGHT  && !zombieToHitRight.isCollideRight) {
 								zombieToHitRight.isHit = true;
-								zombieToHitRight = null;
 							}
 						}
 					}
@@ -247,7 +247,6 @@ package entities
 						if (!(centerY < zombieToHitLeft.y)) {
 							if (this.FACING_LEFT  && !zombieToHitLeft.isCollideLeft) {
 								zombieToHitLeft.isHit = true;
-								zombieToHitLeft = null;
 							}	
 						}
 					}

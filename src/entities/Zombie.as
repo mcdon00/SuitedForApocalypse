@@ -255,7 +255,7 @@ package entities
 			myHealth = TOTAL_HEALTH * healthInc;
 			trace("MYHEALTH"+myHealth);
 
-			healthInc += 0.5;
+			healthInc += 0.2;
 		}
 		
 		public function attackMovement():void {
