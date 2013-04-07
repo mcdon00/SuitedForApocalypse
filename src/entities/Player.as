@@ -203,7 +203,6 @@ package entities
 						}
 					}
 			}
-			trace(zombsRight.length);
 			// of the zombies that are within range on the right side find the closest
 			for (var k:int = 0; k < zombsRight.length; k++) 
 			{

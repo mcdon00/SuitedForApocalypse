@@ -93,7 +93,7 @@ package
 			
 			aryEntZombies = new Array();
 			aryZombieSpawnPoints = new Array();
-			numOfZombies = 10; 
+			numOfZombies = 5; 
 
 			// create and populate an array of lamp entity
 			var locationX:int = 300;
@@ -218,7 +218,9 @@ package
 				timeToSpawn += FP.elapsed;
 				trace(classCount(Zombie) + "-----------");
 				if (timeToSpawn >= 5) {
-					numOfZombies = Math.ceil(numOfZombies * 1.5);
+					numOfZombies = numOfZombies * 0.5;
+					numOfZombies = Math.round(numOfZombies);
+					trace(numOfZombies+"num of zombies")
 					aryEntZombies = spawnZombies(numOfZombies,aryEntZombies);
 					
 					var playerXMiddle:Number = entPlayer.x + (entPlayer.width / 2);
@@ -235,7 +237,7 @@ package
 					callOnce = true;
 					overlay.removeOverlay();
 				}
-				//trace(this.classCount(Zombie));
+				trace(this.classCount(Zombie));
 			}
 			
 			//if zombie is attacking

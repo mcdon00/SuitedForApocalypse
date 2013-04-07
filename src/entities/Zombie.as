@@ -30,7 +30,7 @@ package entities
 		private const SPEED:Number = 100;
 		private const HIT_DELAY:Number = .5;
 		private const ATTACK_DELAY:Number = 3;
-		public const TOTAL_HEALTH:Number = 100;
+		public const TOTAL_HEALTH:Number = 150;
 		private const HEALTH_DEP:Number = 100;
 
 		
@@ -114,7 +114,6 @@ package entities
 			moveRight = 0;
 			rndSpeed = SPEED + Math.floor(Math.random() * 80);
 			v.x = rndSpeed;
-			trace(v.x);
 			hitDelay = HIT_DELAY;
 			attackDelay = ATTACK_DELAY;
 			graphic = sprZombie;
@@ -232,7 +231,7 @@ package entities
 				player.collideInto(Zombie.TYPE_TSHIRT_ZOMBIE, player.x, player.y, aryCZombies);
 				
 				if (isHit) {
-					myHealth -= HEALTH_DEP;
+					myHealth -= (HEALTH_DEP + Math.floor(Math.random()*55));
 					sprZombie.color = 0xff0000;
 					hitDelay = 0;
 					isHit = false;
