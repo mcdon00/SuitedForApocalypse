@@ -62,6 +62,7 @@ package entities
 		public var healthInc:Number;
 		public var isAttacking:Boolean;
 		public var attacked:Boolean;
+		public var gameWorld:GameWorld;
 		
 		public var isHit:Boolean = false;
 		protected var rndSpeed:int = 0;
@@ -71,8 +72,9 @@ package entities
 		
 		//------------------------------------------------CONSTRUCTOR
 		
-		public function Zombie(x:Number,y:Number,myType:String,myPlayer:Player,map:Image) 
+		public function Zombie(x:Number,y:Number,myType:String,myPlayer:Player,map:Image,gWorld:GameWorld) 
 		{
+			gameWorld = gWorld;
 			arySfxAlerted = new Array();
 			arySfxAlerted[0] = new Sfx(ALERTED_ONE_SND);
 			arySfxAlerted[1] = new Sfx(ALERTED_TWO_SND);
@@ -112,7 +114,7 @@ package entities
 			v.x = 0;
 			moveLeft = 0;
 			moveRight = 0;
-			rndSpeed = SPEED + Math.floor(Math.random() * 80);
+			rndSpeed = SPEED + Math.floor(Math.random() * 100);
 			v.x = rndSpeed;
 			hitDelay = HIT_DELAY;
 			attackDelay = ATTACK_DELAY;
@@ -137,13 +139,23 @@ package entities
 			// check if health is depleted
 			if (myHealth <= 0) {
 				isAttacking = false;
+				attacked = false;
+				myHealth = -1;
 				sfxDeath.play();
+				isHit = false;
 				sprZombie.play("death");
-				if(sprZombie.complete)world.remove(this);
+				if (sprZombie.complete) {
+					trace("rem");
+					var myScore:FloatingScore = new FloatingScore(centerX, this.y); 
+					gameWorld.add(myScore);
+					gameWorld.survivalTime += 10;
+					gameWorld.score += 100;
+					world.remove(this);
+				}				
 			}
 			// do not allow any thing else to happen when the zombie is dead
 			// this is to prevent anything else from trying to take place 
-			if (!myHealth <= 0) {
+			if (!(myHealth <= 0)) {
 				hitDelay += FP.elapsed;
 				//check for distance away from player
 				playerXMiddle = player.x + (player.width / 2);
@@ -156,6 +168,7 @@ package entities
 						if (attacked) {
 							sfxAttack.play();
 							sprZombie.play("attack");
+							trace("attacking");
 							if (sprZombie.complete) {
 								attacked = false;
 							}
@@ -171,11 +184,9 @@ package entities
 								(sprZombie.currentAnim == "attack")) {
 									
 								if(distanceFromMe > 75 || player.touchingGround)attackMovement();
-								
 							}
 						}
 						
-						//attackMovement();
 					}else {
 						sprZombie.play("idle");
 						
@@ -231,7 +242,7 @@ package entities
 				player.collideInto(Zombie.TYPE_TSHIRT_ZOMBIE, player.x, player.y, aryCZombies);
 				
 				if (isHit) {
-					myHealth -= (HEALTH_DEP + Math.floor(Math.random()*55));
+					myHealth -= (HEALTH_DEP + Math.floor(Math.random()*100));
 					sprZombie.color = 0xff0000;
 					hitDelay = 0;
 					isHit = false;

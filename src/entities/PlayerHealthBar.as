@@ -23,7 +23,7 @@ package entities
 		{
 			super(x, y);
 			maxHealth = health;
-			label = new Text("Player Health");
+			label = new Text("Health: %100");
 			
 			label.size = 20;
 			createHealthBar();
@@ -41,6 +41,7 @@ package entities
 		public function updateHealthBar(currentHealth:Number):void {
 			var percentHP:Number = currentHealth / maxHealth;
 			playerHealth.scaleX = percentHP;
+			label.text ="Health: %" + Math.round(percentHP * 100);
 			
 		}
 	}
