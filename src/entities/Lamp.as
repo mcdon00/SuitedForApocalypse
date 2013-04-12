@@ -12,7 +12,7 @@ package entities
 	{
 		//-------------------------------------------------CONSTANTS
 		[Embed(source = '../../assets/lamp.png')] private const LAMP:Class;
-		private const MAX_FLICKER_TIME:int = 100;
+		private const MAX_FLICKER_TIME:int = 75;
 		//-------------------------------------------------PROPERTIES
 		public var sprLamp:Spritemap = new Spritemap(LAMP,104.9,285);
 		

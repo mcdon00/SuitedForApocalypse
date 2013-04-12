@@ -1,6 +1,8 @@
 package  
 {
 	import entities.Crate;
+	import entities.FloatingScore;
+	import entities.HealthPack;
 	import entities.Player;
 	import entities.PlayerHealthBar;
 	import entities.ScreenOverlay;
@@ -29,9 +31,9 @@ package
 		[Embed(source = '../assets/sound/backgroundMusic.mp3')] public const MUSIC:Class;
 		
 		private const FLOOR:Number = FP.screen.height - 175;
-		private const SPEED:Number = 175;
+		private const SPEED:Number = 200;
 		private const NUM_OF_LAMPS:Number = 6;
-		private const NUM_OF_CRATES:Number = 5;
+		private const NUM_OF_CRATES:Number = 0;
 		
 		//------------------------------------------------PROPERTIES
 		public var sfxMusic:Sfx = new Sfx(MUSIC);
@@ -59,18 +61,22 @@ package
 		protected var timeToSpawn:Number;
 		
 		//player health bar
-		protected var healthBar:PlayerHealthBar;
+		public var healthBar:PlayerHealthBar;
 		
 		//overlay class
 		protected var overlay:ScreenOverlay;
 		public var gameover:Boolean;
 		
-		protected var waveNum:Number;
+		public var waveNum:Number;
 		private var callOnce:Boolean;
 		
 		// survival time 
 		public var survivalTime:Number;
 		public var displayTimer:Timer;
+		
+		//score
+		public var score:Number;
+		
 	
 
 		//------------------------------------------------CONSTRUCTOR
@@ -80,11 +86,10 @@ package
 		}
 		
 		override public function begin():void {
-			survivalTime = 0;
-			displayTimer = new Timer(0, 0);
-			
-			
-			
+			survivalTime = 30;
+			displayTimer = new Timer(0, 20);
+			score = 0;
+		
 			gameover = true;
 			timeToSpawn = 0;
 			imgBackground = new Image(BACKGROUND_IMG);
@@ -93,7 +98,7 @@ package
 			
 			aryEntZombies = new Array();
 			aryZombieSpawnPoints = new Array();
-			numOfZombies = 5; 
+			numOfZombies = 20; 
 
 			// create and populate an array of lamp entity
 			var locationX:int = 300;
@@ -119,7 +124,7 @@ package
 				aryEntCrate.push(entCrate);
 			}
 			// create the player entity
-			entPlayer = new Player(400, 374);
+			entPlayer = new Player(400, 374,this);
 			
 			//create the zombie entities
 			//aryEntZombies = spawnZombies(numOfZombies);
@@ -171,6 +176,7 @@ package
 			add(displayTimer);
 			sfxMusic.loop();
 			sfxMusic.volume = 0.8;
+			
 		}
 		
 		//------------------------------------------------GAMELOOP
@@ -186,7 +192,6 @@ package
 				gameover = false;
 				timeToSpawn = 0;
 			}
-			
 		}
 		
 		// check if player has died, if so kill the game
@@ -196,29 +201,32 @@ package
 			entPlayer.state = "dead";
 			
 			if (entPlayer.sprPlayer.frame >= 132) {
-				overlay.callGameOver(displayTimer.convertToHHMMSS(survivalTime));
+				overlay.callGameOver(score.toString());
 				gameover = true;
 			}
 			
+		}
+		
+		if (survivalTime <= 1) {
+			overlay.callGameOver(score.toString());
+			gameover = true;
 		}
 		
 		if (!gameover) {
 			entPlayer.sprPlayer.color = 0xffffff;
 			//check if all zombies are eliminated
 			//trace(this.classCount(Zombie));
-			survivalTime += FP.elapsed;
-			//TODO format this time display
-			displayTimer.setTime(Math.round(survivalTime*100)/100);
 			
 			if (this.classCount(Zombie) <= 0) {
-				
 				if (callOnce) waveNum++;
 				callOnce = false;
 				overlay.callNewWave(waveNum);
 				timeToSpawn += FP.elapsed;
 				trace(classCount(Zombie) + "-----------");
+				var changeLevel:Boolean = true;
 				if (timeToSpawn >= 5) {
-					numOfZombies = numOfZombies * 0.5;
+					changeLevel = false;
+					numOfZombies = numOfZombies * 1.5;
 					numOfZombies = Math.round(numOfZombies);
 					trace(numOfZombies+"num of zombies")
 					aryEntZombies = spawnZombies(numOfZombies,aryEntZombies);
@@ -235,11 +243,14 @@ package
 					}
 					timeToSpawn = 0;
 					callOnce = true;
+					
 					overlay.removeOverlay();
 				}
 				trace(this.classCount(Zombie));
 			}
 			
+			if(!changeLevel)survivalTime -= FP.elapsed;
+			displayTimer.setTime(Math.round(survivalTime*100)/100,score);
 			//if zombie is attacking
 			for (var index:String in aryEntZombies) {
 				if (aryEntZombies[index].isAttacking) {
@@ -260,42 +271,48 @@ package
 				
 			}
 			
-			//TODO check for escape key, if pressed send back to main menu
-				//crate/player collision detection
-				var c:Crate = entPlayer.collide("crate", entPlayer.x, entPlayer.y) as Crate;
-				isCollideLeft= false;
-				isCollideRight= false;
-				if (c != null) {
-					if (c && ((entPlayer.y + entPlayer.height) > c.y +15)) {
-						if ((c.x < entPlayer.x + entPlayer.width)&&(c.x > entPlayer.x)) {
-							isCollideLeft = true;
-						}else if ((c.x + c.width >= entPlayer.x)) {
-							isCollideRight = true;
-						}
-					}
-				}
 				
-				//player/zombie collision detection
-				var z:Zombie = entPlayer.collide(Zombie.TYPE_TSHIRT_ZOMBIE, entPlayer.x, entPlayer.y) as Zombie;
-				if (z != null) {
-					if (z && ((entPlayer.y + entPlayer.height) > z.y +15)) {
-					
-						if ((z.x < entPlayer.x + entPlayer.width-15)&&(z.x > entPlayer.x)) {
-							isCollideLeft = true;
-						}else if ((z.x + z.width >= entPlayer.x)&&(z.x < entPlayer.x)) {
-							isCollideRight = true;
-						}
+			//TODO check for escape key, if pressed send back to main menu
+			//crate/player collision detection
+			var c:Crate = entPlayer.collide("crate", entPlayer.x, entPlayer.y) as Crate;
+			isCollideLeft= false;
+			isCollideRight= false;
+			if (c != null) {
+				if (c && ((entPlayer.y + entPlayer.height) > c.y +15)) {
+					if ((c.x < entPlayer.x + entPlayer.width)&&(c.x > entPlayer.x)) {
+						isCollideLeft = true;
+					}else if ((c.x + c.width >= entPlayer.x)) {
+						isCollideRight = true;
 					}
 				}
+			}
+			
+			//player/zombie collision detection
+			var z:Zombie = entPlayer.collide(Zombie.TYPE_TSHIRT_ZOMBIE, entPlayer.x, entPlayer.y) as Zombie;
+			if (z != null) {
+				if (z && ((entPlayer.y + entPlayer.height) > z.y +15)) {
+					if ((z.x < entPlayer.x + entPlayer.width-15)&&(z.x > entPlayer.x)) {
+						isCollideLeft = true;
+					}else if ((z.x + z.width >= entPlayer.x)&&(z.x < entPlayer.x)) {
+						isCollideRight = true;
+					}
+				}
+			}
 				//move player left and right
 				if (Input.check(Key.D) && Input.check("right")) {
 					if (entPlayer.state != "dead") moveWorldRight(SPEED);
 				}else if (Input.check(Key.A) && Input.check("left")) {
 					if (entPlayer.state != "dead") moveWorldLeft(SPEED);
 				}
-				
-			super.update();
+			}else {
+				if (Input..check(Key.ENTER)) {
+					
+					FP.world = new MenuWorld();
+					this.active = false;
+					sfxMusic.stop();
+				}
 			}
+			super.update();
 		}
 		//------------------------------------------------PUBLIC METHODS
 		// function to spawn all of the zombies in the stage
@@ -343,7 +360,7 @@ package
 			// spawn new zombies 
 			for (var k:int = 0; k < numToSpawn; k++) 
 			{
-				entZombie = new Zombie(0, 374, Zombie.TYPE_TSHIRT_ZOMBIE, entPlayer, imgBackground);
+				entZombie = new Zombie(0, 374, Zombie.TYPE_TSHIRT_ZOMBIE, entPlayer, imgBackground,this);
 				zombies.push(entZombie);
 			}
 			// merge the new array of zombies with the old
@@ -421,7 +438,16 @@ package
 					}
 					//TEST ZOMBIE
 					//entZombie.x += mySpeed * FP.elapsed;
-					
+					var aryFloatScores:Array = [];
+					this.getClass(FloatingScore,aryFloatScores);
+					for (i = 0; i < aryFloatScores.length; i++) {
+						aryFloatScores[i].x += mySpeed * FP.elapsed;
+					}
+					var aryHealthPacks:Array = [];
+					this.getClass(HealthPack,aryHealthPacks);
+					for (i = 0; i < aryHealthPacks.length; i++) {
+						aryHealthPacks[i].x += mySpeed * FP.elapsed;
+					}
 				}
 			}
 		}
@@ -453,6 +479,17 @@ package
 					
 					//TEST ZOMBIE
 					//entZombie.x -= mySpeed * FP.elapsed;
+					var aryFloatScores:Array = [];
+					this.getClass(FloatingScore,aryFloatScores);
+					for (i = 0; i < aryFloatScores.length; i++) {
+						aryFloatScores[i].x -= mySpeed * FP.elapsed;
+					}
+					
+					var aryHealthPacks:Array = [];
+					this.getClass(HealthPack,aryHealthPacks);
+					for (i = 0; i < aryHealthPacks.length; i++) {
+						aryHealthPacks[i].x -= mySpeed * FP.elapsed;
+					}
 				}
 			}
 		}
