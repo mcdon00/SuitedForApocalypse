@@ -227,14 +227,15 @@ package entities
 					var distanceFromMe:Number = Math.abs(aryZombies[j].centerX - (this.centerX));
 						if (distanceFromMe < 275) {
 							if ((aryZombies[j].centerX <= this.centerX) && (aryZombies[j].visible)) {
+								trace(aryZombies[j].visible);
 								zombsLeft.push(aryZombies[j]);
 							}
-							if ((aryZombies[j].centerX >= this.centerX)&& (aryZombies[j].visible)) {
+							if ((aryZombies[j].centerX >= this.centerX) && (aryZombies[j].visible)) {
 								zombsRight.push(aryZombies[j]);
 							}
 						}
 				}
-				trace(zombsLeft.length);
+				
 				var zombieToHitRight:Zombie = zombsRight[0];
 				for (var k:int = 1; k < zombsRight.length; k++) 
 				{

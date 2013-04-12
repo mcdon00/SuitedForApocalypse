@@ -76,7 +76,6 @@ package
 		
 		//score
 		public var score:Number;
-		
 	
 
 		//------------------------------------------------CONSTRUCTOR
@@ -98,7 +97,7 @@ package
 			
 			aryEntZombies = new Array();
 			aryZombieSpawnPoints = new Array();
-			numOfZombies = 20; 
+			numOfZombies = 10; 
 
 			// create and populate an array of lamp entity
 			var locationX:int = 300;
@@ -209,6 +208,7 @@ package
 		
 		if (survivalTime <= 1) {
 			overlay.callGameOver(score.toString());
+
 			gameover = true;
 		}
 		
@@ -448,6 +448,7 @@ package
 					for (i = 0; i < aryHealthPacks.length; i++) {
 						aryHealthPacks[i].x += mySpeed * FP.elapsed;
 					}
+
 				}
 			}
 		}
@@ -490,6 +491,7 @@ package
 					for (i = 0; i < aryHealthPacks.length; i++) {
 						aryHealthPacks[i].x -= mySpeed * FP.elapsed;
 					}
+
 				}
 			}
 		}
