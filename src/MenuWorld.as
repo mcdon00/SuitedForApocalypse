@@ -18,16 +18,14 @@ package
 		//const for background image
 		[Embed(source = '../assets/mainMenu.png')] private const BACKGROUND_IMG:Class;
 		[Embed(source = '../assets/instructions.png')] private const INSTRUCTIONS_IMG:Class;
-		
 		//------------------------------------------------PROPERTIES
 		//background image avriable
 		public var imgBackground:Image = new Image(BACKGROUND_IMG);
 		public var imgInstructions:Image;
-	
-		
 		//------------------------------------------------ENTITIES
 		//lamp
 		public var entLamp:Lamp;
+		// buttons
 		public var entPlayBtn:Button;
 		public var entResumeBtn:Button;
 		public var entInstructionsBtn:Button;
@@ -49,7 +47,6 @@ package
 		}
 		override public function begin():void {
 			addGraphic(imgBackground);
-			
 			add(entLamp);
 			add(entPlayBtn);
 			add(entInstBtn);

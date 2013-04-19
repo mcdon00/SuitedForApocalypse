@@ -31,9 +31,10 @@ package
 		[Embed(source = '../assets/sound/backgroundMusic.mp3')] public const MUSIC:Class;
 		
 		private const FLOOR:Number = FP.screen.height - 175;
+		// map movement speed
 		private const SPEED:Number = 200;
 		private const NUM_OF_LAMPS:Number = 6;
-		private const NUM_OF_CRATES:Number = 0;
+		private const NUM_OF_CRATES:Number = 1;
 		
 		//------------------------------------------------PROPERTIES
 		public var sfxMusic:Sfx = new Sfx(MUSIC);
@@ -43,6 +44,7 @@ package
 		public var entLamp:Lamp;
 		public var aryEntLamp:Array;
 		public var entPlayer:Player;
+		//number of zombies
 		public var numOfZombies:Number;
 		public var entZombie:Zombie;
 		public var aryEntZombies:Array;
@@ -66,7 +68,7 @@ package
 		//overlay class
 		protected var overlay:ScreenOverlay;
 		public var gameover:Boolean;
-		
+		// variables for number of waves and a call onece boolean
 		public var waveNum:Number;
 		private var callOnce:Boolean;
 		
@@ -85,20 +87,22 @@ package
 		}
 		
 		override public function begin():void {
+			// init timers and score
 			survivalTime = 30;
 			displayTimer = new Timer(0, 20);
 			score = 0;
 		
 			gameover = true;
 			timeToSpawn = 0;
+			// set the background image
 			imgBackground = new Image(BACKGROUND_IMG);
-			
+			// create arratys of lamps and zombies
 			aryEntLamp = new Array();
 			
 			aryEntZombies = new Array();
 			aryZombieSpawnPoints = new Array();
+			//-------------------------------------number of zombies to start
 			numOfZombies = 10; 
-
 			// create and populate an array of lamp entity
 			var locationX:int = 300;
 			for (var i:int = 0; i < NUM_OF_LAMPS; i++) {
@@ -106,16 +110,17 @@ package
 				aryEntLamp.push(entLamp);
 				locationX += 800;
 			}
-			
-			trace(imgBackground.width + "------------");
-			
 			//create the crate obstacles
 			aryEntCrate = new Array();
 			 //create and populate and array of crate entities
 			locationX = 800;
+			//-------------------------------------number of obstacles to start, with at least three necessary
 			numOfCrates = 0;
+			// generate random number of crates
 			var random:Number = 3 + (Math.floor(Math.random() * ((NUM_OF_CRATES - 3) + 1)));
-			var arr:Array = rndLocationsX(random,80,40); 
+			// generate random number of locations
+			var arr:Array = rndLocationsX(random, 80, 40); 
+			// for each crate create a crate entity and add it to the stage with the random locations
 			for (i = 0; i < random; i++) {
 				numOfCrates++;
 				locationX = arr[i];
@@ -125,14 +130,12 @@ package
 			// create the player entity
 			entPlayer = new Player(400, 374,this);
 			
-			//create the zombie entities
-			//aryEntZombies = spawnZombies(numOfZombies);
+			//create the zombie entities\
+			// spawn zombies randomly
 			aryEntZombies = spawnZombies(numOfZombies,aryEntZombies);
-			trace(numOfCrates + " number of crates");
 			
 			//init the player health bar
 			healthBar = new PlayerHealthBar(550,20,200);
-			
 			
 			// define the inputs for left and right movement
 			Input.define("left", Key.A, Key.LEFT);
@@ -154,7 +157,7 @@ package
 			for (i = 0; i < aryEntZombies.length; i++) {
 				add(aryEntZombies[i]);
 			}
-			
+			// add all the obstacles
 			for (i = 0; i < numOfCrates; i++) {
 				add(aryEntCrate[i]);
 			}
@@ -166,15 +169,18 @@ package
 			
 			//init overlay class
 			overlay = new ScreenOverlay(this);
-			
+			// add the overlay
 			add(overlay);
-			
+			// set the number of waves to 1
 			waveNum = 1;
 			callOnce = true;
 			
+			// add the display timer
 			add(displayTimer);
+			// start the background music
 			sfxMusic.loop();
-			sfxMusic.volume = 0.8;
+			// decrease the volume
+			sfxMusic.volume = 0.7;
 			
 		}
 		
@@ -182,7 +188,7 @@ package
 		
 		override public function update():void {
 			
-		
+		// call the overlay for the first wave
 		if (gameover && waveNum == 1) {
 			timeToSpawn += FP.elapsed;
 			overlay.callNewWave(waveNum);
@@ -194,89 +200,82 @@ package
 		}
 		
 		// check if player has died, if so kill the game
-		if (entPlayer.myHealth <= 0) {
+		if ((entPlayer.myHealth <= 0) || (survivalTime <= 1)) {
+			// remove the health bar
 			remove(healthBar);
 			entPlayer.sprPlayer.play("death");
 			entPlayer.state = "dead";
-			
+			// when the player death animation is done call game over
 			if (entPlayer.sprPlayer.frame >= 132) {
 				overlay.callGameOver(score.toString());
 				gameover = true;
-			}
-			
+			}	
 		}
-		
-		if (survivalTime <= 1) {
-			overlay.callGameOver(score.toString());
-
-			gameover = true;
-		}
-		
+		// check if the game is not over
 		if (!gameover) {
 			entPlayer.sprPlayer.color = 0xffffff;
 			//check if all zombies are eliminated
-			//trace(this.classCount(Zombie));
-			
+			// if they are regenerate a new wave
 			if (this.classCount(Zombie) <= 0) {
+				// increase the number of waves
 				if (callOnce) waveNum++;
 				callOnce = false;
+				// call the new wave overlay
 				overlay.callNewWave(waveNum);
+				// increment the time to spawn timer
 				timeToSpawn += FP.elapsed;
-				trace(classCount(Zombie) + "-----------");
 				var changeLevel:Boolean = true;
+				// when the timer is greater than five seconds add more zombies and start the next wave
 				if (timeToSpawn >= 5) {
 					changeLevel = false;
+					// add another half of zombies 
 					numOfZombies = numOfZombies * 1.5;
 					numOfZombies = Math.round(numOfZombies);
-					trace(numOfZombies+"num of zombies")
-					aryEntZombies = spawnZombies(numOfZombies,aryEntZombies);
-					
+					// spawn more zombies
+					aryEntZombies = spawnZombies(numOfZombies, aryEntZombies);
+					// get the middle position of the player
 					var playerXMiddle:Number = entPlayer.x + (entPlayer.width / 2);
+					// run through each zombie and make sure none are near the player, if they are do not add them
 					for (var i:int = 0; i < aryEntZombies.length; i++) {
-						//add(aryEntZombies[i]);
 						var distanceFromZombie:Number = Math.abs(playerXMiddle - aryEntZombies[i].x);
-						
 						if (distanceFromZombie > 500) {
 							add(aryEntZombies[i]);
-							trace("ADDED" + aryEntZombies[i].x);
 						}						
 					}
 					timeToSpawn = 0;
 					callOnce = true;
-					
 					overlay.removeOverlay();
 				}
-				trace(this.classCount(Zombie));
 			}
-			
-			if(!changeLevel)survivalTime -= FP.elapsed;
+			if (!changeLevel) survivalTime -= FP.elapsed;
+			// set the timer
 			displayTimer.setTime(Math.round(survivalTime*100)/100,score);
 			//if zombie is attacking
 			for (var index:String in aryEntZombies) {
 				if (aryEntZombies[index].isAttacking) {
+					// check which side the zombie is attacking
 					if (aryEntZombies[index].x > entPlayer.centerX) {
-						trace("attacking right");
-						moveWorldLeft(800);
-						entPlayer.sprPlayer.color = 0xff0000;
-						entPlayer.myHealth -= 5;
-						healthBar.updateHealthBar(entPlayer.myHealth);
+						takeHit("left");
+						//moveWorldLeft(800);
+						//entPlayer.sprPlayer.color = 0xff0000;
+						//entPlayer.myHealth -= 5;
+						//healthBar.updateHealthBar(entPlayer.myHealth);
 					}else {
-						trace("attacking left");
-						moveWorldRight(800);
-						entPlayer.sprPlayer.color = 0xff0000;
-						entPlayer.myHealth -= 5;
-						healthBar.updateHealthBar(entPlayer.myHealth);
+						takeHit("right");
+						//moveWorldRight(800);
+						//entPlayer.sprPlayer.color = 0xff0000;
+						//entPlayer.myHealth -= 5;
+						//healthBar.updateHealthBar(entPlayer.myHealth);
 					}
 				}
 				
 			}
 			
-				
-			//TODO check for escape key, if pressed send back to main menu
 			//crate/player collision detection
 			var c:Crate = entPlayer.collide("crate", entPlayer.x, entPlayer.y) as Crate;
+			// reset the collide booleans
 			isCollideLeft= false;
-			isCollideRight= false;
+			isCollideRight = false;
 			if (c != null) {
 				if (c && ((entPlayer.y + entPlayer.height) > c.y +15)) {
 					if ((c.x < entPlayer.x + entPlayer.width)&&(c.x > entPlayer.x)) {
@@ -305,8 +304,8 @@ package
 					if (entPlayer.state != "dead") moveWorldLeft(SPEED);
 				}
 			}else {
+				// when the game is over allow the enter button to be pressed so the game can be reset
 				if (Input..check(Key.ENTER)) {
-					
 					FP.world = new MenuWorld();
 					this.active = false;
 					sfxMusic.stop();
@@ -345,8 +344,7 @@ package
 					var isDup:Boolean = false;
 					//trace(posX + " : "+ aryEntCrate[l].x+"zombie crates--------------" + l);
 					while (((posX + 100) > aryEntCrate[l].x)&&((posX-100) < (aryEntCrate[l].x+aryEntCrate[l].width))) 
-					{
-						
+					{	
 						//trace(posX + "in crate" + aryEntCrate[l].x);
 						posX = Math.floor(startMap + (Math.random() * (endMap - startMap)));
 						isDup = true;
@@ -379,36 +377,24 @@ package
 		//function to generate random locations, used for obstacles
 		//function generates a random number within a certain range specified but then multiplyed by the width
 		//of the object that is being placed, this is to ensure each location is a multiple of the width
-		// and thus wont be overlapping unless the exact same number is generated, in which case there is a 
+		// and wont be overlapping unless the exact same number is generated, in which case there is a 
 		//condition to fix that
 		public function rndLocationsX(numOfLocations:int, entWidth:Number, range:Number):Array {
 			var posX:Number = 0;
 			var aryPastLocations:Array = new Array();
 			var aryLocations:Array = new Array();
-			for (var j:int = 0; j < numOfLocations; j++) 
-			{
+			// generate locations randomly, cjeck for duplicates and regenerate
+			for (var j:int = 0; j < numOfLocations; j++) {
 				posX = 800 + (Math.floor(Math.random() * range)) * entWidth;
-				for (var i:int = 0; i < aryPastLocations.length; i++) 
-				{
-					//TODO sometimes locations are still the same
-					//MIGHT BE DUE TO THE LOCATIONS BEING GENERATED ON MAIN MENU THEN WHEN GAME WORLD IS LOADED
+				for (var i:int = 0; i < aryPastLocations.length; i++) {	
 					while (aryPastLocations[i] == posX) {
-						trace("DUP------------------" + posX);
 						posX = 800 + (Math.floor(Math.random() * range)) * entWidth;
-						trace("NEW------------------" + posX);
 					}						
 				}
-				if (posX > 4815 ) {
-					trace(posX+"----------------------OVER SIZE");
-				}else {
-					trace(posX);
-				}
-				
+				// add all locations to array
 				aryPastLocations.push(posX);
 				aryLocations.push(posX);
 			}
-			
-			
 			return aryLocations;
 		}
 		
@@ -436,24 +422,22 @@ package
 					for (i = 0; i < aryEntZombies.length; i++) {
 						aryEntZombies[i].x += mySpeed * FP.elapsed;
 					}
-					//TEST ZOMBIE
-					//entZombie.x += mySpeed * FP.elapsed;
+					// move flaoting scores with map
 					var aryFloatScores:Array = [];
 					this.getClass(FloatingScore,aryFloatScores);
 					for (i = 0; i < aryFloatScores.length; i++) {
 						aryFloatScores[i].x += mySpeed * FP.elapsed;
 					}
+					// move health packs with map
 					var aryHealthPacks:Array = [];
 					this.getClass(HealthPack,aryHealthPacks);
 					for (i = 0; i < aryHealthPacks.length; i++) {
 						aryHealthPacks[i].x += mySpeed * FP.elapsed;
 					}
-
 				}
 			}
 		}
-		public function moveWorldRight(mySpeed:Number):void 
-		{
+		public function moveWorldRight(mySpeed:Number):void {
 			//check for end of map, if not at end move the map under the player
 			if (!(entPlayer.x + entPlayer.width >= imgBackground.x +imgBackground.width -50)) {
 				if (!isCollideLeft) {
@@ -477,15 +461,13 @@ package
 					for (i = 0; i < aryEntZombies.length; i++) {
 						aryEntZombies[i].x -= mySpeed * FP.elapsed;
 					}
-					
-					//TEST ZOMBIE
-					//entZombie.x -= mySpeed * FP.elapsed;
+					// move floating scores with map
 					var aryFloatScores:Array = [];
 					this.getClass(FloatingScore,aryFloatScores);
 					for (i = 0; i < aryFloatScores.length; i++) {
 						aryFloatScores[i].x -= mySpeed * FP.elapsed;
 					}
-					
+					// move health pack with map
 					var aryHealthPacks:Array = [];
 					this.getClass(HealthPack,aryHealthPacks);
 					for (i = 0; i < aryHealthPacks.length; i++) {
@@ -494,6 +476,21 @@ package
 
 				}
 			}
+		}
+		// function to handle player recieving an attack from a zombie
+		public function takeHit(side:String):void {
+			// check which side attack is happening on move entities
+			if (side == "left") {
+				moveWorldLeft(800);
+			}else {
+				moveWorldRight(800);
+			}
+			// flash the player red
+			entPlayer.sprPlayer.color = 0xff0000;
+			// reduce player health
+			entPlayer.myHealth -= 5;
+			// update his health bar
+			healthBar.updateHealthBar(entPlayer.myHealth);
 		}
 		
 	}

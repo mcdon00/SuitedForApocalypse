@@ -8,8 +8,7 @@ package
 	 * ...
 	 * @author Nathan
 	 */
-	public class Main extends Engine 
-	{
+	public class Main extends Engine {
 		//------------------------------------------------CONSTANTS
 		//------------------------------------------------PROPERTIES
 		// variables to hold menu world and game world
@@ -20,17 +19,12 @@ package
 		//------------------------------------------------CONSTRUCTOR
 		public function Main():void 
 		{
-			
 			//call the super class constructor and give it the screen dimensions
 			super(800, 600);
-			// TODO fix frame rate, have to adjust sprite sheet frame rates though
-			//super(800, 600,60,true);
-			
 			//init menu and game world objects
 			mainMenu = new MenuWorld();
 			gameWorld = new GameWorld();
-			FP.console.enable();
-			
+			//FP.console.enable();
 		}
 		//------------------------------------------------INIT
 		public override function init():void 

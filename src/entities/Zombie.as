@@ -194,8 +194,8 @@ package entities
 						gameWorld.add(myHealthPack);
 					}
 					// add more time to the clock, if the waves are over 4 decrease how much time is added
-					var timeIncrease:Number = 5;
-					if (gameWorld.waveNum > 3) timeIncrease = 2;
+					var timeIncrease:Number = 4;
+					if (gameWorld.waveNum > 2) timeIncrease = 2;
 					gameWorld.survivalTime += timeIncrease;
 					// increase the score
 					gameWorld.score += 100;
@@ -324,7 +324,7 @@ package entities
 		// ovveridden method for when the zombie is added to teh world
 		public override function added():void {
 			// increase how much to depcreate health
-			healthInc += 0.2;
+			//healthInc += 0.2;
 			// make visible again
 			this.visible = true;
 			// reset health
